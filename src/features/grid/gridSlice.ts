@@ -22,11 +22,12 @@ export interface gridState {
 	alertMsg: string;
 	imgData?: string;
 	dimensions: Dimensions;
+	startLanePosition: Point | null;
 }
 
 const initialState: gridState = {
 	currentLap: 1,
-	raceLaps: 3,
+	raceLaps: 1,
 	isMoving: false,
 	grid: [],
 	loading: false,
@@ -34,6 +35,7 @@ const initialState: gridState = {
 	gear: 0,
 	alertMsg: "",
 	dimensions: { w: 100, h: 100 },
+	startLanePosition: null,
 };
 
 export const gridSlice = createSlice({
@@ -45,6 +47,9 @@ export const gridSlice = createSlice({
 		},
 		setStartLane: (state, action: PayloadAction<StartLane>) => {
 			state.startLane = action.payload;
+		},
+		setStartLanePosition: (state, action: PayloadAction<Point | null>) => {
+			state.startLanePosition = action.payload;
 		},
 		setStartLaneStart: (state, action: PayloadAction<Point>) => {
 			state.startLaneStart = action.payload;
@@ -76,6 +81,7 @@ export const {
 	setTrailPoints,
 	setGear,
 	setCurrentLap,
+	setStartLanePosition,
 } = gridSlice.actions;
 export const selectGridData = (state: RootState) => [
 	state.grid.dimensions,
@@ -90,6 +96,8 @@ export const selectRaceLaps = (state: RootState) => state.grid.raceLaps;
 export const selectTrailPoints = (state: RootState) => state.grid.trailPoints;
 export const selectStartLane = (state: RootState) => state.grid.startLane;
 export const selectCurrentLap = (state: RootState) => state.grid.currentLap;
+export const selectStartLanePosition = (state: RootState) =>
+	state.grid.startLanePosition;
 export const selectStartLaneStart = (state: RootState) =>
 	state.grid.startLaneStart;
 

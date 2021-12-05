@@ -32,6 +32,7 @@ import {
 	selectIsmoving,
 	selectRaceLaps,
 	selectStartLane,
+	selectStartLanePosition,
 	selectStartLaneStart,
 	selectTrailPoints,
 	setAlertMsg,
@@ -39,6 +40,7 @@ import {
 	setGear,
 	setIsMoving,
 	setStartLane,
+	setStartLanePosition,
 	setStartLaneStart,
 	setTrailPoints,
 } from "./gridSlice";
@@ -57,6 +59,7 @@ const Grid = () => {
 	const gear = useAppSelector(selectGear) as Gear;
 	const dispatch = useAppDispatch();
 	const lastPointRef = useRef<Point>({ x: 0, y: 0 });
+	const startLanePosition = useAppSelector(selectStartLanePosition);
 
 	const navigate = useNavigate();
 	const directionHistoryRef = useRef<Direction>("");
@@ -151,6 +154,7 @@ const Grid = () => {
 					moveDetails.finishLineInfo !== "wrong direction"
 				) {
 					directionHistoryRef.current = moveDetails.direction;
+					//setto un variabile locale per currentlap altrimenti se la gara finisce devo aspettare la mossa successiva per accorgermene
 					let newCurrentLap = currentLap;
 					if (moveDetails.finishLineInfo === "one lap less to go") {
 						newCurrentLap += 1;
@@ -166,11 +170,11 @@ const Grid = () => {
 						)
 					);
 					dispatch(setTrailPoints(moveDetails.points));
-					dispatch(
-						changeGameState(
-							newCurrentLap === raceLaps ? GameState.end : gameState
-						)
-					);
+					if (
+						newCurrentLap === raceLaps + 1 &&
+						moveDetails.finishLineInfo !== "incident at cut line"
+					)
+						dispatch(changeGameState(GameState.end));
 					dispatch(setGear(moveDetails.isCrash ? 0 : moveDetails.gear));
 				}
 			}
@@ -182,6 +186,17 @@ const Grid = () => {
 			x: Math.floor((e.clientX + CELL_SIZE / 2) / CELL_SIZE) * CELL_SIZE,
 			y: Math.floor((e.clientY + CELL_SIZE / 2) / CELL_SIZE) * CELL_SIZE,
 		};
+
+		if (
+			gameState === GameState.running &&
+			trailPoints.length === 0 &&
+			isPointInSegment(point, startLane.arrowPoints as Segment)
+		) {
+			dispatch(setStartLanePosition(point));
+		} else {
+			dispatch(setStartLanePosition(null));
+		}
+
 		if (
 			isMoving &&
 			!(
@@ -200,6 +215,13 @@ const Grid = () => {
 					)
 				);
 			} else if (gameState === GameState.running) {
+				if (
+					isPointInSegment(point, startLane.arrowPoints as Segment) &&
+					trailPoints.length === 0
+				) {
+					dispatch(setStartLanePosition(point));
+				}
+
 				let newTrailPoints: PathPoint[] = getMoveDetails(
 					trailPoints,
 					point,
@@ -224,7 +246,24 @@ const Grid = () => {
 
 	let arrows: JSX.Element[] = [];
 	let circles: (JSX.Element | never[])[] = [];
+	let startCircle: JSX.Element;
 	let lines: (JSX.Element | never[])[] = [];
+
+	if (startLanePosition) {
+		let style: CSSProperties = {};
+		style.stroke = "aqua";
+		style.strokeWidth = 4;
+		style.opacity = 1;
+		startCircle = (
+			<circle
+				key={"startCircle"}
+				cx={startLanePosition.x}
+				cy={startLanePosition.y}
+				r="4"
+				style={style}
+			/>
+		);
+	} else startCircle = <></>;
 
 	if (trailPoints.length > 0) {
 		let filtered = trailPoints.filter(
@@ -290,7 +329,10 @@ const Grid = () => {
 					(dimensions as Dimensions).h
 				}
 			>
-				<g id="startLane">{arrows}</g>
+				<g id="startLane">
+					{arrows}
+					{startCircle}
+				</g>
 				{circles}
 				{lines}
 			</SvgBoard>

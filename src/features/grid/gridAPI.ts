@@ -17,13 +17,13 @@ import {
 export function checkCutFinishLine(
 	move: Move,
 	startLane: StartLane,
-	trailPoints: Point[]
+	trailPoints: PathPoint[]
 ): string {
 	var slPoints: Segment = startLane.points as Segment;
 	var slDirection: Direction = startLane.directionOfTravel as Direction;
 
 	var points: Segment = getPointsOfSegment(move).reverse();
-	var intersections: Array<Boolean> = points.map((point: Point) =>
+	var intersections: boolean[] = points.map((point: Point) =>
 		isPointInSegment(point, slPoints)
 	);
 	var EIntersections: boolean[] = points
@@ -31,7 +31,7 @@ export function checkCutFinishLine(
 			return { x: point.x - CELL_SIZE, y: point.y };
 		})
 		.map((point: Point) => isPointInSegment(point, slPoints));
-	var OIntersections = points
+	var OIntersections: boolean[] = points
 		.map((point) => {
 			return { x: point.x + CELL_SIZE, y: point.y };
 		})
@@ -366,10 +366,7 @@ export function getMoveDetails(
 	//se c'è un last good point vuold dire che l'incidente è avvenuto e non è una ripartenza da un incidente
 	if (status === "moved" && crashInfo.yesItIs && crashInfo.lastGoodPoint) {
 		points = points.filter((p, i) => i < points.length - 1);
-		if (
-			finishLineInfo === "one lap less to go" &&
-			currentLap === raceLaps - 1
-		) {
+		if (finishLineInfo === "one lap less to go" && currentLap === raceLaps) {
 			let newPoint: PathPoint = {
 				x: points[points.length - 1].x,
 				y: points[points.length - 1].y,

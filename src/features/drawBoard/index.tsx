@@ -4,7 +4,13 @@ import { BG_COLOR, CELL_SIZE, GameState, TRACK_COLOR } from "../constants";
 import { useNavigate } from "react-router-dom";
 import { Point } from "../types";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { selectColor, selectSize } from "./drawBoardSlice";
+import {
+	removeExternalDataUrl,
+	selectColor,
+	selectExternalDataUrl,
+	selectSize,
+	setDataUrl,
+} from "./drawBoardSlice";
 
 import { getGrid, rgbToHex } from "./drawBoardAPI";
 import { changeGameState, selectGameState } from "../dashBoard/dashBoardSlice";
@@ -22,13 +28,21 @@ const DrawBoard = () => {
 	const brushColor = useAppSelector(selectColor);
 	const brushSize = useAppSelector(selectSize);
 	const gameState = useAppSelector(selectGameState);
+	const externalDataURL = useAppSelector(selectExternalDataUrl);
 
 	useLayoutEffect(() => {
 		let canvas = canvasRef.current;
 		if (canvas) {
 			const ctx = canvas.getContext("2d");
 			if (ctx) {
-				if (gameState === GameState.start) {
+				if (externalDataURL) {
+					var img = new Image();
+					img.src = externalDataURL;
+					setTimeout(() => {
+						ctx.drawImage(img, 0, 0);
+						dispatch(removeExternalDataUrl());
+					});
+				} else if (gameState === GameState.start) {
 					ctx.fillStyle = BG_COLOR;
 					ctx.fillRect(0, 0, canvas.width, canvas.height);
 					dispatch(changeGameState(GameState.draw));
@@ -115,6 +129,10 @@ const DrawBoard = () => {
 		last_mouse.current.x = mouse.current.x;
 		last_mouse.current.y = mouse.current.y;
 		down.current = false;
+
+		let canvas = canvasRef.current;
+
+		if (canvas) dispatch(setDataUrl(canvas.toDataURL()));
 	};
 	const handleMouseMove = (
 		e: React.MouseEvent<HTMLCanvasElement, MouseEvent>

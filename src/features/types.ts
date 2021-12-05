@@ -42,9 +42,7 @@ export interface CrashInfo {
 	yesItIs: boolean;
 }
 
-export interface PathPoint {
-	x: number;
-	y: number;
+export interface PathPoint extends Point {
 	isCrash?: boolean;
 	isMoved?: boolean;
 }

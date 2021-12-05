@@ -20,6 +20,11 @@ const styledSvg = styled.svg`
 		stroke-width: 1;
 	}
 	#startLane {
+		circle {
+			fill: rgba(0, 0, 0, 0);
+			stroke: rgba(255, 200, 100, 1);
+			stroke-width: 4;
+		}
 		polyline {
 			fill: rgba(0, 0, 0, 0);
 			stroke: rgba(255, 200, 00, 1);
