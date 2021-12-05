@@ -23,11 +23,12 @@ export interface gridState {
 	imgData?: string;
 	dimensions: Dimensions;
 	startLanePosition: Point | null;
+	movesNumber: number;
 }
 
 const initialState: gridState = {
 	currentLap: 1,
-	raceLaps: 1,
+	raceLaps: 2,
 	isMoving: false,
 	grid: [],
 	loading: false,
@@ -36,12 +37,34 @@ const initialState: gridState = {
 	alertMsg: "",
 	dimensions: { w: 100, h: 100 },
 	startLanePosition: null,
+	startLaneStart: undefined,
+	startLane: undefined,
+	imgData: undefined,
+	movesNumber: 0,
 };
 
 export const gridSlice = createSlice({
 	name: "grid",
 	initialState,
 	reducers: {
+		resetInitialState: (state) => {
+			state.currentLap = initialState.currentLap;
+			state.raceLaps = initialState.raceLaps;
+			state.isMoving = initialState.isMoving;
+			state.grid = initialState.grid;
+			state.loading = initialState.loading;
+			state.trailPoints = initialState.trailPoints;
+			state.gear = initialState.gear;
+			state.alertMsg = initialState.alertMsg;
+			state.dimensions = initialState.dimensions;
+			state.startLaneStart = initialState.startLaneStart;
+			state.startLane = initialState.startLane;
+			state.imgData = initialState.imgData;
+			state.movesNumber = initialState.movesNumber;
+		},
+		setMovesNumber: (state, action: PayloadAction<number>) => {
+			state.movesNumber = action.payload;
+		},
 		setGridData: (state, action: PayloadAction<GridData>) => {
 			[state.dimensions, state.grid, state.imgData] = action.payload;
 		},
@@ -82,6 +105,8 @@ export const {
 	setGear,
 	setCurrentLap,
 	setStartLanePosition,
+	resetInitialState,
+	setMovesNumber,
 } = gridSlice.actions;
 export const selectGridData = (state: RootState) => [
 	state.grid.dimensions,
@@ -89,6 +114,7 @@ export const selectGridData = (state: RootState) => [
 	state.grid.imgData,
 ];
 
+export const selectMovesNumber = (state: RootState) => state.grid.movesNumber;
 export const selectIsmoving = (state: RootState) => state.grid.isMoving;
 export const selectGear = (state: RootState) => state.grid.gear;
 export const selectAlertMsg = (state: RootState) => state.grid.alertMsg;

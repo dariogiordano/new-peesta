@@ -3,7 +3,7 @@ import React, { useRef, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { CELL_SIZE, GameState, TRAIL_COLOR, TRAIL_LENGTH } from "../constants";
-import { changeGameState, selectGameState } from "../dashBoard/dashBoardSlice";
+import { selectGameState } from "../dashBoard/dashBoardSlice";
 import {
 	Dimensions,
 	Direction,
@@ -43,12 +43,15 @@ import {
 	setStartLanePosition,
 	setStartLaneStart,
 	setTrailPoints,
+	setMovesNumber,
+	selectMovesNumber,
 } from "./gridSlice";
 import StyledGrid from "./styled";
 import SvgBoard from "./svgBoard";
 
 const Grid = () => {
 	const raceLaps = useAppSelector(selectRaceLaps);
+	const movesNumber = useAppSelector(selectMovesNumber);
 	const currentLap = useAppSelector(selectCurrentLap);
 	const gameState: GameState = useAppSelector(selectGameState);
 	const trailPoints = useAppSelector(selectTrailPoints);
@@ -65,6 +68,9 @@ const Grid = () => {
 	const directionHistoryRef = useRef<Direction>("");
 	useEffect(() => {
 		if ((grid as IGrid).length === 0) navigate("/draw");
+		if (gameState === GameState.end) {
+			dispatch(setAlertMsg(`hai impiegato ${movesNumber} mosse`));
+		}
 	});
 
 	const handleClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -96,7 +102,6 @@ const Grid = () => {
 				//la ripetizione dell'evento in caso di movimento
 				//del mouse dentro la cella x,y
 				lastPointRef.current = point;
-
 				//segno il punto di partenza sulla linea di partenza
 
 				if (
@@ -127,6 +132,7 @@ const Grid = () => {
 					dispatch(setAlertMsg("Click on a point on start lane to start"));
 				}
 			} else {
+				dispatch(setMovesNumber(movesNumber + 1));
 				const moveDetails = getMoveDetails(
 					trailPoints,
 					point,
@@ -170,11 +176,6 @@ const Grid = () => {
 						)
 					);
 					dispatch(setTrailPoints(moveDetails.points));
-					if (
-						newCurrentLap === raceLaps + 1 &&
-						moveDetails.finishLineInfo !== "incident at cut line"
-					)
-						dispatch(changeGameState(GameState.end));
 					dispatch(setGear(moveDetails.isCrash ? 0 : moveDetails.gear));
 				}
 			}
@@ -236,13 +237,6 @@ const Grid = () => {
 			}
 		}
 	};
-
-	if (gameState === GameState.draw)
-		dispatch(changeGameState(GameState.drawFinishLine));
-
-	if (gameState === GameState.end) {
-		dispatch(setAlertMsg(`hai impiegato ${trailPoints.length - 1} mosse`));
-	}
 
 	let arrows: JSX.Element[] = [];
 	let circles: (JSX.Element | never[])[] = [];

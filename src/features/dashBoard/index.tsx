@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import Button from "../../app/UIComponents/Button";
 import {
@@ -20,18 +20,21 @@ import {
 	selectCurrentLap,
 	selectGear,
 	selectRaceLaps,
-	selectTrailPoints,
 	setAlertMsg,
 	setCurrentLap,
 	setGear,
+	resetInitialState,
 	setIsMoving,
 	setTrailPoints,
+	selectMovesNumber,
+	setMovesNumber,
 } from "../grid/gridSlice";
+import { useNavigate } from "react-router";
 
 const DashBoard = () => {
 	const dispatch = useAppDispatch();
 	const brushColor = useAppSelector(selectColor);
-	const moves = useAppSelector(selectTrailPoints);
+	const moves = useAppSelector(selectMovesNumber);
 	const brushSize = useAppSelector(selectSize);
 	const gameState = useAppSelector(selectGameState);
 	const alertMsg = useAppSelector(selectAlertMsg);
@@ -39,6 +42,17 @@ const DashBoard = () => {
 	const raceLaps = useAppSelector(selectRaceLaps);
 	const gear = useAppSelector(selectGear);
 	const dataUrl = useAppSelector(selectDataUrl);
+	const navigate = useNavigate();
+
+	useEffect(() => {
+		if (currentLap === raceLaps + 1) dispatch(changeGameState(GameState.end));
+	}, [currentLap, dispatch, raceLaps]);
+
+	const backToDraw = () => {
+		dispatch(resetInitialState());
+		dispatch(changeGameState(GameState.start));
+		navigate("/draw");
+	};
 	const startAgain = () => {
 		dispatch(changeGameState(GameState.running));
 		dispatch(setTrailPoints([]));
@@ -46,6 +60,7 @@ const DashBoard = () => {
 		dispatch(setCurrentLap(1));
 		dispatch(setGear(0));
 		dispatch(setAlertMsg(""));
+		dispatch(setMovesNumber(0));
 	};
 	const handleFileChange = (e: any) => {
 		let fileData = new FileReader();
@@ -111,7 +126,7 @@ const DashBoard = () => {
 				))}
 			{gameState === GameState.drawFinishLine && (
 				<Button
-					text="START RUNNING"
+					text="START RACE!"
 					onButtonClick={() => dispatch(changeGameState(GameState.running))}
 				></Button>
 			)}
@@ -121,10 +136,14 @@ const DashBoard = () => {
 						LAP:{currentLap}/{raceLaps}
 					</div>
 					<div>GEAR:{gear}</div>
-					<div>MOVES:{moves.length === 0 ? 0 : moves.length - 1}</div>
+					<div>MOVES:{moves}</div>
 					<Button
 						text="RESTART RACE"
 						onButtonClick={() => startAgain()}
+					></Button>
+					<Button
+						text="DRAW ANOTHER TRACK"
+						onButtonClick={() => backToDraw()}
 					></Button>
 				</div>
 			)}
