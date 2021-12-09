@@ -3,7 +3,7 @@ import { Dimensions } from "../../types";
 
 interface GridProps {
 	dimensions: Dimensions;
-	bg?: string;
+	bg: string | null;
 }
 const StyledGrid = styled.div<GridProps>`
 	position: relative;

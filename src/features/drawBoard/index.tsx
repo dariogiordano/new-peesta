@@ -1,8 +1,8 @@
-import React, { useRef, useLayoutEffect } from "react";
+import React, { useRef, useLayoutEffect, useEffect } from "react";
 import StyledDrawBoard from "./styled";
 import { BG_COLOR, CELL_SIZE, GameState, TRACK_COLOR } from "../constants";
-import { useNavigate } from "react-router-dom";
-import { Point } from "../types";
+import { useNavigate, useParams } from "react-router-dom";
+import { Point, TrackData } from "../types";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
 	removeExternalDataUrl,
@@ -14,7 +14,7 @@ import {
 
 import { getGrid, rgbToHex } from "./drawBoardAPI";
 import { changeGameState, selectGameState } from "../dashBoard/dashBoardSlice";
-import { setGridData } from "../grid/gridSlice";
+import { setTrackData, selectRaceLaps } from "../grid/gridSlice";
 
 const DrawBoard = () => {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -25,11 +25,11 @@ const DrawBoard = () => {
 	const navigate = useNavigate();
 	const width: number = window.innerWidth - 240;
 	const height: number = window.innerHeight;
+	const raceLaps = useAppSelector(selectRaceLaps);
 	const brushColor = useAppSelector(selectColor);
 	const brushSize = useAppSelector(selectSize);
 	const gameState = useAppSelector(selectGameState);
 	const externalDataURL = useAppSelector(selectExternalDataUrl);
-
 	useLayoutEffect(() => {
 		let canvas = canvasRef.current;
 		if (canvas) {
@@ -40,11 +40,13 @@ const DrawBoard = () => {
 					img.src = externalDataURL;
 					setTimeout(() => {
 						ctx.drawImage(img, 0, 0);
+						if (canvas) addBorder(ctx, canvas.width, canvas.height);
 						dispatch(removeExternalDataUrl());
 					});
 				} else if (gameState === GameState.start) {
 					ctx.fillStyle = BG_COLOR;
 					ctx.fillRect(0, 0, canvas.width, canvas.height);
+					addBorder(ctx, canvas.width, canvas.height);
 					dispatch(changeGameState(GameState.draw));
 				}
 				ctx.lineWidth = brushSize;
@@ -52,10 +54,10 @@ const DrawBoard = () => {
 				ctx.lineCap = "round";
 				ctx.strokeStyle = brushColor;
 				if (gameState === GameState.drawFinishLine) {
+					deleteBorder(ctx, width, height);
 					let gridPromise = getGrid(
 						canvas,
 						CELL_SIZE,
-
 						height,
 						width,
 						BG_COLOR,
@@ -78,13 +80,14 @@ const DrawBoard = () => {
 							}
 						}
 						if (canvas) {
-							dispatch(
-								setGridData([
-									{ w: width, h: height },
-									result.grid,
-									canvas.toDataURL(),
-								])
-							);
+							const newTrackData: TrackData = {
+								dimensions: { w: width, h: height },
+								grid: result.grid,
+								imgData: canvas.toDataURL(),
+								raceLaps,
+								startLane: null,
+							};
+							dispatch(setTrackData(newTrackData));
 							navigate("/play");
 						}
 					});
@@ -92,6 +95,43 @@ const DrawBoard = () => {
 			}
 		}
 	});
+
+	const deleteBorder = (
+		ctx: CanvasRenderingContext2D,
+		width: number,
+		height: number
+	) => {
+		//DELETE BORDER
+		ctx.beginPath();
+		ctx.lineWidth = CELL_SIZE * 2 + CELL_SIZE / 2;
+		ctx.strokeStyle = BG_COLOR;
+		ctx.moveTo(0, 0);
+		ctx.lineTo(width, 0);
+		ctx.lineTo(width, height);
+		ctx.lineTo(0, height);
+		ctx.lineTo(0, 0);
+		ctx.closePath();
+		ctx.stroke();
+	};
+	const addBorder = (
+		ctx: CanvasRenderingContext2D,
+		width: number,
+		height: number
+	) => {
+		ctx.lineWidth = 1;
+		const border: number = CELL_SIZE;
+		ctx.beginPath();
+		ctx.strokeStyle = "red";
+		ctx.setLineDash([4, 8]);
+		ctx.moveTo(border, border);
+		ctx.lineTo(width - border, border);
+		ctx.lineTo(width - border, height - border);
+		ctx.lineTo(border, height - border);
+		ctx.lineTo(border, border);
+		ctx.closePath();
+		ctx.stroke();
+		ctx.setLineDash([]);
+	};
 
 	const onPaint = (ctx: CanvasRenderingContext2D | null) => {
 		if (ctx) {
@@ -130,9 +170,20 @@ const DrawBoard = () => {
 		last_mouse.current.y = mouse.current.y;
 		down.current = false;
 
-		let canvas = canvasRef.current;
-
-		if (canvas) dispatch(setDataUrl(canvas.toDataURL()));
+		let canvas = canvasRef.current as HTMLCanvasElement;
+		let canvasToDownload = document.createElement(
+			"CANVAS"
+		) as HTMLCanvasElement;
+		let img = new Image();
+		img.src = canvas.toDataURL();
+		let ctx = canvasToDownload.getContext("2d") as CanvasRenderingContext2D;
+		canvasToDownload.width = canvas.width;
+		canvasToDownload.height = canvas.height;
+		setTimeout(() => {
+			ctx.drawImage(img, 0, 0);
+			deleteBorder(ctx, canvas.width, canvas.height);
+			dispatch(setDataUrl(canvasToDownload.toDataURL()));
+		});
 	};
 	const handleMouseMove = (
 		e: React.MouseEvent<HTMLCanvasElement, MouseEvent>

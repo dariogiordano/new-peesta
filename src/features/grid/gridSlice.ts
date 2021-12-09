@@ -4,43 +4,53 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../app/store";
 import { BG_COLOR, TRACK_COLOR } from "../constants";
-import { Dimensions, Gear, IGrid, PathPoint, Point, StartLane } from "../types";
+import {
+	Gear,
+	PathPoint,
+	Point,
+	StartLane,
+	TrackData,
+	MyTrailData,
+	OpponentTrailData,
+} from "../types";
 
 export type BrushColor = typeof TRACK_COLOR | typeof BG_COLOR;
 
-type GridData = [dimensions: Dimensions, grid: IGrid, imgData: string];
-export interface gridState {
-	raceLaps: number;
-	currentLap: number;
-	isMoving: boolean;
-	startLaneStart?: Point;
-	startLane?: StartLane;
-	grid: IGrid;
-	loading: false;
-	trailPoints: PathPoint[];
-	gear: Gear;
+export interface matchState {
+	trackData: TrackData;
+	myTrailData: MyTrailData;
+	opponentTrailData?: OpponentTrailData;
 	alertMsg: string;
-	imgData?: string;
-	dimensions: Dimensions;
-	startLanePosition: Point | null;
-	movesNumber: number;
+	playerMoving: string | null;
 }
 
-const initialState: gridState = {
+export const initialMyTrailData: MyTrailData = {
 	currentLap: 1,
-	raceLaps: 2,
-	isMoving: false,
-	grid: [],
-	loading: false,
 	trailPoints: [],
 	gear: 0,
-	alertMsg: "",
-	dimensions: { w: 100, h: 100 },
-	startLanePosition: null,
-	startLaneStart: undefined,
-	startLane: undefined,
-	imgData: undefined,
+	isMoving: false,
 	movesNumber: 0,
+	startLanePosition: null,
+};
+
+const initialState: matchState = {
+	playerMoving: null,
+	trackData: {
+		raceLaps: 2,
+		dimensions: { w: 100, h: 100 },
+		startLane: {
+			arrowPoints: null,
+			arrows: null,
+			directionOfTravel: null,
+			point1: null,
+			point2: null,
+			points: null,
+		},
+		imgData: null,
+		grid: [],
+	},
+	myTrailData: initialMyTrailData,
+	alertMsg: "",
 };
 
 export const gridSlice = createSlice({
@@ -48,83 +58,87 @@ export const gridSlice = createSlice({
 	initialState,
 	reducers: {
 		resetInitialState: (state) => {
-			state.currentLap = initialState.currentLap;
-			state.raceLaps = initialState.raceLaps;
-			state.isMoving = initialState.isMoving;
-			state.grid = initialState.grid;
-			state.loading = initialState.loading;
-			state.trailPoints = initialState.trailPoints;
-			state.gear = initialState.gear;
+			state.myTrailData = initialState.myTrailData;
+			state.trackData = initialState.trackData;
 			state.alertMsg = initialState.alertMsg;
-			state.dimensions = initialState.dimensions;
-			state.startLaneStart = initialState.startLaneStart;
-			state.startLane = initialState.startLane;
-			state.imgData = initialState.imgData;
-			state.movesNumber = initialState.movesNumber;
 		},
-		setMovesNumber: (state, action: PayloadAction<number>) => {
-			state.movesNumber = action.payload;
+
+		setPlayerMoving: (state, action: PayloadAction<string>) => {
+			state.playerMoving = action.payload;
 		},
-		setGridData: (state, action: PayloadAction<GridData>) => {
-			[state.dimensions, state.grid, state.imgData] = action.payload;
+		setTrackData: (state, action: PayloadAction<TrackData>) => {
+			state.trackData = action.payload;
 		},
-		setStartLane: (state, action: PayloadAction<StartLane>) => {
-			state.startLane = action.payload;
+		setMyTrailData: (state, action: PayloadAction<MyTrailData>) => {
+			state.myTrailData = action.payload;
 		},
-		setStartLanePosition: (state, action: PayloadAction<Point | null>) => {
-			state.startLanePosition = action.payload;
+		setMyMovesNumber: (state, action: PayloadAction<number>) => {
+			state.myTrailData.movesNumber = action.payload;
 		},
-		setStartLaneStart: (state, action: PayloadAction<Point>) => {
-			state.startLaneStart = action.payload;
+		setStartLane: (state, action: PayloadAction<StartLane | null>) => {
+			state.trackData.startLane = action.payload;
 		},
-		setIsMoving: (state, action: PayloadAction<boolean>) => {
-			state.isMoving = action.payload;
+
+		setMyStartLanePosition: (state, action: PayloadAction<Point | null>) => {
+			state.myTrailData.startLanePosition = action.payload;
+		},
+
+		setMyIsMoving: (state, action: PayloadAction<boolean>) => {
+			state.myTrailData.isMoving = action.payload;
 		},
 		setAlertMsg: (state, action: PayloadAction<string>) => {
 			state.alertMsg = action.payload;
 		},
-		setTrailPoints: (state, action: PayloadAction<PathPoint[]>) => {
-			state.trailPoints = action.payload;
+		setMyTrailPoints: (state, action: PayloadAction<PathPoint[]>) => {
+			state.myTrailData.trailPoints = action.payload;
 		},
-		setGear: (state, action: PayloadAction<Gear>) => {
-			state.gear = action.payload;
+		setMyGear: (state, action: PayloadAction<Gear>) => {
+			state.myTrailData.gear = action.payload;
 		},
-		setCurrentLap: (state, action: PayloadAction<number>) => {
-			state.currentLap = action.payload;
+		setMyCurrentLap: (state, action: PayloadAction<number>) => {
+			state.myTrailData.currentLap = action.payload;
+		},
+		setOpponentTrailData: (state, action: PayloadAction<OpponentTrailData>) => {
+			state.opponentTrailData = action.payload;
 		},
 	},
 });
 
 export const {
-	setGridData,
+	setTrackData,
+	setMyTrailData,
 	setStartLane,
-	setStartLaneStart,
-	setIsMoving,
+	setMyIsMoving,
 	setAlertMsg,
-	setTrailPoints,
-	setGear,
-	setCurrentLap,
-	setStartLanePosition,
+	setMyTrailPoints,
+	setMyGear,
+	setMyCurrentLap,
+	setMyStartLanePosition,
 	resetInitialState,
-	setMovesNumber,
+	setMyMovesNumber,
+	setPlayerMoving,
+	setOpponentTrailData,
 } = gridSlice.actions;
-export const selectGridData = (state: RootState) => [
-	state.grid.dimensions,
-	state.grid.grid,
-	state.grid.imgData,
-];
-
-export const selectMovesNumber = (state: RootState) => state.grid.movesNumber;
-export const selectIsmoving = (state: RootState) => state.grid.isMoving;
-export const selectGear = (state: RootState) => state.grid.gear;
+export const selectTrackData = (state: RootState) => state.grid.trackData;
+export const selectPlayerMoving = (state: RootState) => state.grid.playerMoving;
+export const selectMyTrailData = (state: RootState) => state.grid.myTrailData;
+export const selectOpponentTrailData = (state: RootState) =>
+	state.grid.opponentTrailData;
+export const selectMyMovesNumber = (state: RootState) =>
+	state.grid.myTrailData.movesNumber;
+export const selectMyIsmoving = (state: RootState) =>
+	state.grid.myTrailData.isMoving;
+export const selectMyGear = (state: RootState) => state.grid.myTrailData.gear;
 export const selectAlertMsg = (state: RootState) => state.grid.alertMsg;
-export const selectRaceLaps = (state: RootState) => state.grid.raceLaps;
-export const selectTrailPoints = (state: RootState) => state.grid.trailPoints;
-export const selectStartLane = (state: RootState) => state.grid.startLane;
-export const selectCurrentLap = (state: RootState) => state.grid.currentLap;
-export const selectStartLanePosition = (state: RootState) =>
-	state.grid.startLanePosition;
-export const selectStartLaneStart = (state: RootState) =>
-	state.grid.startLaneStart;
+export const selectRaceLaps = (state: RootState) =>
+	state.grid.trackData.raceLaps;
+export const selectMyTrailPoints = (state: RootState) =>
+	state.grid.myTrailData.trailPoints;
+export const selectStartLane = (state: RootState) =>
+	state.grid.trackData.startLane;
+export const selectMyCurrentLap = (state: RootState) =>
+	state.grid.myTrailData.currentLap;
+export const selectMyStartLanePosition = (state: RootState) =>
+	state.grid.myTrailData.startLanePosition;
 
 export default gridSlice.reducer;

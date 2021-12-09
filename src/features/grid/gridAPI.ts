@@ -1,4 +1,4 @@
-import { CELL_SIZE, GEAR_MAX } from "../constants";
+import { CELL_SIZE, GEAR_MAX, MAX_OFFROAD_LENGTH } from "../constants";
 import {
 	CrashInfo,
 	Direction,
@@ -612,21 +612,15 @@ export function getStartLane(
 	startLaneStart: Point,
 	grid: IGrid
 ): StartLane {
-	var directionCohords = isTrackRecursive(
-		startLaneStart,
-		direction,
-		1,
-
-		grid
-	);
+	var directionCohords = isTrackRecursive(startLaneStart, direction, 1, grid);
 	var oppositeDirection = getOppositeDirection(direction);
 	var oppositeDirectionCohords = isTrackRecursive(
 		startLaneStart,
 		oppositeDirection,
 		1,
-
 		grid
 	);
+
 	var gear = getGear(
 		directionCohords as Point,
 		oppositeDirectionCohords as Point
@@ -671,11 +665,7 @@ export function isTrackRecursive(
 	}
 }
 
-export function isValidStartLane(
-	startLane: StartLane,
-
-	grid: IGrid
-) {
+export function isValidStartLane(startLane: StartLane, grid: IGrid) {
 	let valuesArray = [
 		getGridValue(startLane.point1 as Point, grid),
 		getGridValue(startLane.point2 as Point, grid),
@@ -771,7 +761,9 @@ quindi non valorizzo il punto di ripartenza per bloccare la mossa */
 		lastGoodPoint = points[index];
 	}
 	return {
-		yesItIs: move.gear > 0 && (redPoints.length > 2 || gridValues[0] !== 1),
+		yesItIs:
+			move.gear > 0 &&
+			(redPoints.length > MAX_OFFROAD_LENGTH || gridValues[0] !== 1),
 		lastGoodPoint,
 	};
 }

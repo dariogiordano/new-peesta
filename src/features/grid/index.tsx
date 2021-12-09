@@ -2,19 +2,19 @@ import { CSSProperties } from "hoist-non-react-statics/node_modules/@types/react
 import React, { useRef, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { CELL_SIZE, GameState, TRAIL_COLOR, TRAIL_LENGTH } from "../constants";
+import {
+	CELL_SIZE,
+	GameState,
+	RaceState,
+	TRAIL_COLOR,
+	TRAIL_LENGTH,
+} from "../constants";
 import { selectGameState } from "../dashBoard/dashBoardSlice";
 import {
-	Dimensions,
-	Direction,
-	Gear,
-	IGrid,
-	MoveStatus,
-	PathPoint,
-	Point,
-	Segment,
-	StartLane,
-} from "../types";
+	setRaceState,
+	selectRaceState,
+} from "../socketClient/socketClientSlice";
+import { Direction, MoveStatus, PathPoint, Point, Segment } from "../types";
 import {
 	getGridValue,
 	getMoveDetails,
@@ -26,50 +26,36 @@ import {
 	isValidStartLane,
 } from "./gridAPI";
 import {
-	selectCurrentLap,
-	selectGear,
-	selectGridData,
-	selectIsmoving,
-	selectRaceLaps,
-	selectStartLane,
-	selectStartLanePosition,
-	selectStartLaneStart,
-	selectTrailPoints,
+	selectTrackData,
 	setAlertMsg,
-	setCurrentLap,
-	setGear,
-	setIsMoving,
+	setMyCurrentLap,
+	setMyGear,
+	setMyIsMoving,
 	setStartLane,
-	setStartLanePosition,
-	setStartLaneStart,
-	setTrailPoints,
-	setMovesNumber,
-	selectMovesNumber,
+	setMyStartLanePosition,
+	setMyTrailPoints,
+	setMyMovesNumber,
+	selectMyTrailData,
 } from "./gridSlice";
 import StyledGrid from "./styled";
 import SvgBoard from "./svgBoard";
 
 const Grid = () => {
-	const raceLaps = useAppSelector(selectRaceLaps);
-	const movesNumber = useAppSelector(selectMovesNumber);
-	const currentLap = useAppSelector(selectCurrentLap);
 	const gameState: GameState = useAppSelector(selectGameState);
-	const trailPoints = useAppSelector(selectTrailPoints);
-	const isMoving = useAppSelector(selectIsmoving);
-	const startLane = useAppSelector(selectStartLane) as StartLane;
-	const startLaneStart = useAppSelector(selectStartLaneStart) as Point;
-	const [dimensions, grid, bg] = useAppSelector(selectGridData);
-	const gear = useAppSelector(selectGear) as Gear;
+	const raceState: RaceState = useAppSelector(selectRaceState);
+	const startLaneStartRef = useRef<Point>({ x: 50000, y: 50000 });
+	const myTrailData = useAppSelector(selectMyTrailData);
+	const trackData = useAppSelector(selectTrackData);
+
 	const dispatch = useAppDispatch();
 	const lastPointRef = useRef<Point>({ x: 0, y: 0 });
-	const startLanePosition = useAppSelector(selectStartLanePosition);
 
 	const navigate = useNavigate();
 	const directionHistoryRef = useRef<Direction>("");
 	useEffect(() => {
-		if ((grid as IGrid).length === 0) navigate("/draw");
-		if (gameState === GameState.end) {
-			dispatch(setAlertMsg(`hai impiegato ${movesNumber} mosse`));
+		if (trackData.grid.length === 0) navigate("/draw");
+		if (gameState === GameState.trainingEnd) {
+			dispatch(setAlertMsg(`hai impiegato ${myTrailData.movesNumber} mosse`));
 		}
 	});
 
@@ -80,24 +66,29 @@ const Grid = () => {
 		};
 		//disegno della start lane
 		if (gameState === GameState.drawFinishLine) {
-			if (!isMoving) {
+			if (!myTrailData.isMoving) {
 				lastPointRef.current = point;
-
-				if (getGridValue(point, grid as IGrid) === 1) {
-					dispatch(setStartLane({}));
-					dispatch(setStartLaneStart(point));
-					dispatch(setIsMoving(true));
+				if (getGridValue(point, trackData.grid) === 1) {
+					dispatch(setStartLane(null));
+					startLaneStartRef.current = point;
+					dispatch(setMyIsMoving(true));
 					dispatch(setAlertMsg(""));
 				} else
 					dispatch(
 						setAlertMsg("click a point on the track to draw the start lane.")
 					);
-			} else if (isValidStartLane(startLane, grid as IGrid)) {
-				dispatch(setIsMoving(false));
+			} else if (
+				trackData.startLane &&
+				isValidStartLane(trackData.startLane, trackData.grid)
+			) {
+				dispatch(setMyIsMoving(false));
 				dispatch(setAlertMsg(""));
 			}
-		} else if (gameState === GameState.running) {
-			if (!isMoving) {
+		} else if (
+			gameState === GameState.trainingStart ||
+			(gameState === GameState.raceStart && raceState === RaceState.moving)
+		) {
+			if (!myTrailData.isMoving) {
 				//registro lastPoint per attivare il sistema che evita
 				//la ripetizione dell'evento in caso di movimento
 				//del mouse dentro la cella x,y
@@ -105,43 +96,44 @@ const Grid = () => {
 				//segno il punto di partenza sulla linea di partenza
 
 				if (
-					isPointInSegment(point, startLane.arrowPoints as Segment) &&
-					trailPoints.length === 0
+					trackData.startLane &&
+					isPointInSegment(point, trackData.startLane.arrowPoints as Segment) &&
+					myTrailData.trailPoints.length === 0
 				) {
-					dispatch(setIsMoving(true));
+					dispatch(setMyIsMoving(true));
 					dispatch(setAlertMsg(""));
-					dispatch(setTrailPoints([point]));
-				} else if (trailPoints.length > 0) {
-					dispatch(setIsMoving(true));
+					dispatch(setMyTrailPoints([point]));
+				} else if (trackData.startLane && myTrailData.trailPoints.length > 0) {
+					dispatch(setMyIsMoving(true));
 					dispatch(setAlertMsg(""));
 					dispatch(
-						setTrailPoints(
+						setMyTrailPoints(
 							getMoveDetails(
-								trailPoints,
+								myTrailData.trailPoints,
 								point,
 								MoveStatus.start,
-								gear,
-								startLane,
-								grid as IGrid,
-								currentLap,
-								raceLaps
+								myTrailData.gear,
+								trackData.startLane,
+								trackData.grid,
+								myTrailData.currentLap,
+								trackData.raceLaps
 							).points
 						)
 					);
 				} else {
 					dispatch(setAlertMsg("Click on a point on start lane to start"));
 				}
-			} else {
-				dispatch(setMovesNumber(movesNumber + 1));
+			} else if (trackData.startLane) {
+				dispatch(setMyMovesNumber(myTrailData.movesNumber + 1));
 				const moveDetails = getMoveDetails(
-					trailPoints,
+					myTrailData.trailPoints,
 					point,
 					MoveStatus.moved,
-					gear,
-					startLane,
-					grid as IGrid,
-					currentLap,
-					raceLaps
+					myTrailData.gear,
+					trackData.startLane,
+					trackData.grid,
+					myTrailData.currentLap,
+					trackData.raceLaps
 				);
 				/*
         if (moveDetails.points...
@@ -149,25 +141,32 @@ const Grid = () => {
         */
 				if (
 					moveDetails.points &&
-					!isOutOfRange(moveDetails.points, dimensions as Dimensions) &&
+					!isOutOfRange(moveDetails.points, trackData.dimensions) &&
 					!isUTurn(
 						moveDetails.direction,
 						directionHistoryRef.current as Direction,
-						startLane,
-						gear,
-						trailPoints
+						trackData.startLane,
+						myTrailData.gear,
+						myTrailData.trailPoints
 					) &&
 					moveDetails.finishLineInfo !== "wrong direction"
 				) {
 					directionHistoryRef.current = moveDetails.direction;
 					//setto un variabile locale per currentlap altrimenti se la gara finisce devo aspettare la mossa successiva per accorgermene
-					let newCurrentLap = currentLap;
+					let newCurrentLap = myTrailData.currentLap;
 					if (moveDetails.finishLineInfo === "one lap less to go") {
 						newCurrentLap += 1;
-						dispatch(setCurrentLap(newCurrentLap));
+						dispatch(setMyCurrentLap(newCurrentLap));
 					}
-
-					dispatch(setIsMoving(false));
+					dispatch(setMyIsMoving(false));
+					/*this tells system tha the move ended so the info
+					can be emitted via socket to the opponent*/
+					if (
+						gameState === GameState.raceStart &&
+						raceState === RaceState.moving
+					) {
+						dispatch(setRaceState(RaceState.moved));
+					}
 					dispatch(
 						setAlertMsg(
 							moveDetails.finishLineInfo === "incident at cut line"
@@ -175,8 +174,8 @@ const Grid = () => {
 								: ""
 						)
 					);
-					dispatch(setTrailPoints(moveDetails.points));
-					dispatch(setGear(moveDetails.isCrash ? 0 : moveDetails.gear));
+					dispatch(setMyTrailPoints(moveDetails.points));
+					dispatch(setMyGear(moveDetails.isCrash ? 0 : moveDetails.gear));
 				}
 			}
 		}
@@ -189,17 +188,23 @@ const Grid = () => {
 		};
 
 		if (
-			gameState === GameState.running &&
-			trailPoints.length === 0 &&
-			isPointInSegment(point, startLane.arrowPoints as Segment)
+			trackData.startLane &&
+			(gameState === GameState.trainingStart ||
+				(gameState === GameState.raceStart &&
+					raceState === RaceState.moving)) &&
+			myTrailData.trailPoints.length === 0 &&
+			isPointInSegment(point, trackData.startLane.arrowPoints as Segment)
 		) {
-			dispatch(setStartLanePosition(point));
-		} else {
-			dispatch(setStartLanePosition(null));
+			dispatch(setMyStartLanePosition(point));
+		} else if (
+			gameState === GameState.trainingStart ||
+			(gameState === GameState.raceStart && raceState === RaceState.moving)
+		) {
+			dispatch(setMyStartLanePosition(null));
 		}
 
 		if (
-			isMoving &&
+			myTrailData.isMoving &&
 			!(
 				e.clientX >= lastPointRef.current.x - CELL_SIZE / 2 &&
 				e.clientX < lastPointRef.current.x + CELL_SIZE / 2 &&
@@ -209,31 +214,39 @@ const Grid = () => {
 		) {
 			lastPointRef.current = point;
 			if (gameState === GameState.drawFinishLine) {
-				var pointAndDir = getPointAndDir(startLaneStart, point);
+				var pointAndDir = getPointAndDir(startLaneStartRef.current, point);
 				dispatch(
 					setStartLane(
-						getStartLane(pointAndDir.direction, startLaneStart, grid as IGrid)
+						getStartLane(
+							pointAndDir.direction,
+							startLaneStartRef.current,
+							trackData.grid
+						)
 					)
 				);
-			} else if (gameState === GameState.running) {
+			} else if (
+				trackData.startLane &&
+				(gameState === GameState.trainingStart ||
+					(gameState === GameState.raceStart && raceState === RaceState.moving))
+			) {
 				if (
-					isPointInSegment(point, startLane.arrowPoints as Segment) &&
-					trailPoints.length === 0
+					isPointInSegment(point, trackData.startLane.arrowPoints as Segment) &&
+					myTrailData.trailPoints.length === 0
 				) {
-					dispatch(setStartLanePosition(point));
+					dispatch(setMyStartLanePosition(point));
 				}
 
 				let newTrailPoints: PathPoint[] = getMoveDetails(
-					trailPoints,
+					myTrailData.trailPoints,
 					point,
 					MoveStatus.moving,
-					gear,
-					startLane,
-					grid as IGrid,
-					currentLap,
-					raceLaps
+					myTrailData.gear,
+					trackData.startLane,
+					trackData.grid,
+					myTrailData.currentLap,
+					trackData.raceLaps
 				).points;
-				dispatch(setTrailPoints(newTrailPoints));
+				dispatch(setMyTrailPoints(newTrailPoints));
 			}
 		}
 	};
@@ -243,7 +256,7 @@ const Grid = () => {
 	let startCircle: JSX.Element;
 	let lines: (JSX.Element | never[])[] = [];
 
-	if (startLanePosition) {
+	if (myTrailData.startLanePosition) {
 		let style: CSSProperties = {};
 		style.stroke = "aqua";
 		style.strokeWidth = 4;
@@ -251,16 +264,16 @@ const Grid = () => {
 		startCircle = (
 			<circle
 				key={"startCircle"}
-				cx={startLanePosition.x}
-				cy={startLanePosition.y}
+				cx={myTrailData.startLanePosition.x}
+				cy={myTrailData.startLanePosition.y}
 				r="4"
 				style={style}
 			/>
 		);
 	} else startCircle = <></>;
 
-	if (trailPoints.length > 0) {
-		let filtered = trailPoints.filter(
+	if (myTrailData.trailPoints.length > 0) {
+		let filtered = myTrailData.trailPoints.filter(
 			(point, i, points) => i >= points.length - TRAIL_LENGTH
 		);
 		circles = filtered.reverse().map(function (point, i, a) {
@@ -290,7 +303,6 @@ const Grid = () => {
 				};
 				return (
 					<line
-						//	pippo={TRAIL_LENGTH - (TRAIL_LENGTH - i)}
 						key={"line" + i}
 						x1={point.x}
 						y1={point.y}
@@ -303,25 +315,20 @@ const Grid = () => {
 			return [];
 		});
 	}
-	if (startLane && startLane.arrows)
-		arrows = startLane.arrows.map(function (arrow, i) {
+	if (trackData.startLane && trackData.startLane.arrows)
+		arrows = trackData.startLane.arrows.map(function (arrow, i) {
 			return <polyline key={i} id="line" points={arrow} />;
 		});
 
 	return (
 		<StyledGrid
-			dimensions={dimensions as Dimensions}
-			bg={bg as string}
+			dimensions={trackData.dimensions}
+			bg={trackData.imgData}
 			onClick={(e) => handleClick(e)}
 			onMouseMove={(e) => handleMove(e)}
 		>
 			<SvgBoard
-				viewBox={
-					"0 0 " +
-					(dimensions as Dimensions).w +
-					" " +
-					(dimensions as Dimensions).h
-				}
+				viewBox={"0 0 " + trackData.dimensions.w + " " + trackData.dimensions.h}
 			>
 				<g id="startLane">
 					{arrows}

@@ -4,6 +4,7 @@ import StyledButton from "./styled";
 export interface ButtonProps {
 	text: string;
 	onButtonClick: Function;
+	disabled?: boolean;
 }
 
 const Button = (props: ButtonProps) => {

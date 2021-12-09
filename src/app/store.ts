@@ -1,6 +1,7 @@
 import { configureStore, ThunkAction, Action } from "@reduxjs/toolkit";
 import drawBoardReducer from "../features/drawBoard/drawBoardSlice";
 import dashBoardReducer from "../features/dashBoard/dashBoardSlice";
+import socketClientReducer from "../features/socketClient/socketClientSlice";
 import gridReducer from "../features/grid/gridSlice";
 
 export const store = configureStore({
@@ -8,6 +9,7 @@ export const store = configureStore({
 		drawBoard: drawBoardReducer,
 		dashBoard: dashBoardReducer,
 		grid: gridReducer,
+		socketClient: socketClientReducer,
 	},
 });
 

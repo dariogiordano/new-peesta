@@ -12,41 +12,55 @@ import {
 import { selectGameState } from "./dashBoardSlice";
 import StyledDashBoard from "./styled";
 import { changeGameState } from "./dashBoardSlice";
-import { BG_COLOR, GameState, TRACK_COLOR } from "../constants";
+import { BG_COLOR, GameState, RaceState, TRACK_COLOR } from "../constants";
 import ColorButton from "../../app/UIComponents/ColorButton";
 import Slider from "../../app/UIComponents/Slider";
 import {
 	selectAlertMsg,
-	selectCurrentLap,
-	selectGear,
 	selectRaceLaps,
 	setAlertMsg,
-	setCurrentLap,
-	setGear,
 	resetInitialState,
-	setIsMoving,
-	setTrailPoints,
-	selectMovesNumber,
-	setMovesNumber,
+	setMyTrailData,
+	initialMyTrailData,
+	selectMyTrailData,
 } from "../grid/gridSlice";
 import { useNavigate } from "react-router";
+
+import CopyToClipboard from "../../app/UIComponents/CopyToClipboard";
+import {
+	selectMyPlayerId,
+	selectRaceState,
+	selectRoomName,
+} from "../socketClient/socketClientSlice";
 
 const DashBoard = () => {
 	const dispatch = useAppDispatch();
 	const brushColor = useAppSelector(selectColor);
-	const moves = useAppSelector(selectMovesNumber);
+	const myTrailData = useAppSelector(selectMyTrailData);
 	const brushSize = useAppSelector(selectSize);
 	const gameState = useAppSelector(selectGameState);
 	const alertMsg = useAppSelector(selectAlertMsg);
-	const currentLap = useAppSelector(selectCurrentLap);
 	const raceLaps = useAppSelector(selectRaceLaps);
-	const gear = useAppSelector(selectGear);
 	const dataUrl = useAppSelector(selectDataUrl);
 	const navigate = useNavigate();
+	const roomName = useAppSelector(selectRoomName);
+	const myId = useAppSelector(selectMyPlayerId);
+	const raceState = useAppSelector(selectRaceState);
 
 	useEffect(() => {
-		if (currentLap === raceLaps + 1) dispatch(changeGameState(GameState.end));
-	}, [currentLap, dispatch, raceLaps]);
+		if (myTrailData.currentLap === raceLaps + 1) {
+			endRace();
+			dispatch(changeGameState(GameState.trainingEnd));
+		}
+	}, [dispatch, myTrailData.currentLap, raceLaps]);
+
+	const startRace = () => {
+		dispatch(changeGameState(GameState.raceStart));
+		//TODO: socket logic
+	};
+	const endRace = () => {
+		//TODO: socket logic
+	};
 
 	const backToDraw = () => {
 		dispatch(resetInitialState());
@@ -54,13 +68,9 @@ const DashBoard = () => {
 		navigate("/draw");
 	};
 	const startAgain = () => {
-		dispatch(changeGameState(GameState.running));
-		dispatch(setTrailPoints([]));
-		dispatch(setIsMoving(false));
-		dispatch(setCurrentLap(1));
-		dispatch(setGear(0));
+		dispatch(changeGameState(GameState.trainingStart));
+		dispatch(setMyTrailData(initialMyTrailData));
 		dispatch(setAlertMsg(""));
-		dispatch(setMovesNumber(0));
 	};
 	const handleFileChange = (e: any) => {
 		let fileData = new FileReader();
@@ -83,15 +93,14 @@ const DashBoard = () => {
 
 	return (
 		<StyledDashBoard cursorSize={brushSize}>
-			<div>{alertMsg}</div>
 			{gameState === GameState.start ||
 				(gameState === GameState.draw && (
 					<>
 						<Button
 							text="DRAW FINISH LINE"
-							onButtonClick={() => {
-								dispatch(changeGameState(GameState.drawFinishLine));
-							}}
+							onButtonClick={() =>
+								dispatch(changeGameState(GameState.drawFinishLine))
+							}
 						></Button>
 						<Button
 							text="RESET"
@@ -108,16 +117,18 @@ const DashBoard = () => {
 							onClick={(e: any) => (e.target.value = null)}
 							onChange={(e: any) => handleFileChange(e.target.files[0])}
 						/>
-						<ColorButton
-							onButtonClick={() => dispatch(changeColor(TRACK_COLOR))}
-							brushColor={brushColor}
-							color={TRACK_COLOR}
-						/>
-						<ColorButton
-							onButtonClick={() => dispatch(changeColor(BG_COLOR))}
-							brushColor={brushColor}
-							color={BG_COLOR}
-						/>
+						<div>
+							<ColorButton
+								onButtonClick={() => dispatch(changeColor(TRACK_COLOR))}
+								brushColor={brushColor}
+								color={TRACK_COLOR}
+							/>
+							<ColorButton
+								onButtonClick={() => dispatch(changeColor(BG_COLOR))}
+								brushColor={brushColor}
+								color={BG_COLOR}
+							/>
+						</div>
 						<Slider
 							brushSize={brushSize}
 							onChange={(e: number) => dispatch(changeSize(e))}
@@ -125,36 +136,68 @@ const DashBoard = () => {
 					</>
 				))}
 			{gameState === GameState.drawFinishLine && (
-				<Button
-					text="START RACE!"
-					onButtonClick={() => dispatch(changeGameState(GameState.running))}
-				></Button>
-			)}
-			{gameState === GameState.running && (
-				<div>
-					<div>
-						LAP:{currentLap}/{raceLaps}
-					</div>
-					<div>GEAR:{gear}</div>
-					<div>MOVES:{moves}</div>
+				<>
 					<Button
-						text="RESTART RACE"
+						text="DO YOUR TRAINING"
+						onButtonClick={() =>
+							dispatch(changeGameState(GameState.trainingStart))
+						}
+					></Button>
+					<Button text="START RACE!" onButtonClick={() => startRace()}></Button>
+				</>
+			)}
+			{gameState === GameState.raceStart && (
+				<>
+					{raceState === RaceState.waitingOpponentStart && (
+						<CopyToClipboard
+							textToCopy={`${window.location.protocol}//${window.location.host}/${roomName}/${myId}`}
+						/>
+					)}
+					{(raceState === RaceState.moving ||
+						raceState === RaceState.waitingOpponentMove) && (
+						<div className="no-select">
+							<div>
+								LAP:{myTrailData.currentLap}/{raceLaps}
+							</div>
+							<div>GEAR:{myTrailData.gear}</div>
+							<div>MOVES:{myTrailData.movesNumber}</div>
+						</div>
+					)}
+				</>
+			)}
+			{gameState === GameState.trainingStart && (
+				<>
+					<Button
+						text="RESTART TRAINING"
+						onButtonClick={() => startAgain()}
+					></Button>
+					<Button text="START RACE!" onButtonClick={() => startRace()}></Button>
+					<Button
+						text="DRAW ANOTHER TRACK"
+						onButtonClick={() => backToDraw()}
+					></Button>
+					<div className="no-select">
+						<div>
+							LAP:{myTrailData.currentLap}/{raceLaps}
+						</div>
+						<div>GEAR:{myTrailData.gear}</div>
+						<div>MOVES:{myTrailData.movesNumber}</div>
+					</div>
+				</>
+			)}
+			{gameState === GameState.trainingEnd && (
+				<>
+					<Button
+						text="START AGAIN"
 						onButtonClick={() => startAgain()}
 					></Button>
 					<Button
 						text="DRAW ANOTHER TRACK"
 						onButtonClick={() => backToDraw()}
 					></Button>
-				</div>
+				</>
 			)}
-			{gameState === GameState.end && (
-				<div>
-					<Button
-						text="START AGAIN"
-						onButtonClick={() => startAgain()}
-					></Button>
-				</div>
-			)}
+			<div className="alert-box">{alertMsg}</div>
 		</StyledDashBoard>
 	);
 };

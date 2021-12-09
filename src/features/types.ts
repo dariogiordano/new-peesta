@@ -6,12 +6,12 @@ export interface Point {
 export type Segment = Point[];
 
 export interface StartLane {
-	points?: Segment;
-	arrowPoints?: Segment;
-	directionOfTravel?: Direction;
-	arrows?: string[];
-	point1?: Point;
-	point2?: Point;
+	points: Segment | null;
+	arrowPoints: Segment | null;
+	directionOfTravel: Direction | null;
+	arrows: string[] | null;
+	point1: Point | null;
+	point2: Point | null;
 }
 
 export type Direction = "O" | "E" | "S" | "N" | "NE" | "NO" | "SE" | "SO" | "";
@@ -45,4 +45,25 @@ export interface CrashInfo {
 export interface PathPoint extends Point {
 	isCrash?: boolean;
 	isMoved?: boolean;
+}
+
+export interface MyTrailData {
+	trailPoints: PathPoint[];
+	gear: Gear;
+	startLanePosition: Point | null;
+	movesNumber: number;
+	currentLap: number;
+	isMoving: boolean;
+}
+export interface OpponentTrailData {
+	trailPoint: PathPoint;
+	//	direction: Direction;
+}
+
+export interface TrackData {
+	dimensions: Dimensions;
+	grid: IGrid;
+	imgData: string | null;
+	raceLaps: number;
+	startLane: StartLane | null;
 }
