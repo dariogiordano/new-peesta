@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
@@ -14,8 +14,10 @@ import {
 	selectRaceEndState,
 } from "./socketClientSlice";
 import {
+	resetInitialState,
 	selectMyTrailData,
 	selectTrackData,
+	setAlertMsg,
 	setOpponentTrailData,
 	setTrackData,
 } from "../grid/gridSlice";
@@ -143,7 +145,27 @@ const SocketClient = () => {
 				dispatch(setRaceEndState(RaceEndState.draw));
 			}
 		});
+
+		socket.on("leftAlone", () => {
+			dispatch(resetInitialState());
+			dispatch(changeGameState(GameState.start));
+			navigate("/draw");
+			dispatch(setAlertMsg("Your opponent left the race."));
+		});
+
+		socket.on("error", (playerId) => {
+			console.log(opponentId, playerId);
+			if (opponentId === playerId) {
+				dispatch(resetInitialState());
+				dispatch(changeGameState(GameState.start));
+				navigate("/error");
+				dispatch(setAlertMsg("An error occurred"));
+			}
+		});
+
 		return () => {
+			socket.off("error");
+			socket.off("leftAlone");
 			socket.off("update");
 			socket.off("setPlayer1");
 			socket.off("setPlayer2");
@@ -151,6 +173,17 @@ const SocketClient = () => {
 			socket.off("won");
 			socket.off("draw");
 		};
+	});
+
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	const handleUnload = () => {
+		alert("WIAA");
+		socket.emit("playerWillUnregister");
+	};
+
+	useEffect(() => {
+		window.addEventListener("beforeunload", handleUnload);
+		return () => window.removeEventListener("beforeunload", handleUnload);
 	});
 
 	return <></>;

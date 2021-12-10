@@ -6,6 +6,8 @@ export interface ServerToClientEvents {
 	lastChance: (playerMoving: string, newPointMove: PathPoint) => void;
 	won: (playerMoving: string, newPointMove: PathPoint) => void;
 	draw: (playerMoving: string, newPointMove: PathPoint) => void;
+	leftAlone: () => void;
+	error: (playerId: string) => void;
 }
 
 export interface ClientToServerEvents {
@@ -17,4 +19,5 @@ export interface ClientToServerEvents {
 	firstToFinishRace: (point: PathPoint) => void;
 	lost: (point: PathPoint) => void;
 	draw: (point: PathPoint) => void;
+	playerWillUnregister: () => void;
 }

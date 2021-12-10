@@ -55,20 +55,6 @@ const DashBoard = () => {
 	const raceState = useAppSelector(selectRaceState);
 	const raceEndState = useAppSelector(selectRaceEndState);
 
-	/*useEffect(() => {
-		//determina cosa succede dopo il traguardo o dopo l'ultima mossa possibile per cercare di pareggiare
-		if (myTrailData.currentLap === raceLaps + 1) {
-			if (gameState === GameState.trainingStart)
-				dispatch(changeGameState(GameState.trainingEnd));
-			if (gameState === GameState.raceStart)
-				dispatch(changeGameState(GameState.raceEnd));
-			if (raceState === RaceState.lastChanceToDraw)
-				dispatch(setRaceEndState(RaceEndState.draw));
-		} else if (raceState === RaceState.lastChanceToDraw) {
-			dispatch(setRaceEndState(RaceEndState.lost));
-		}
-	}, [dispatch, myTrailData.currentLap, raceLaps, gameState, raceState]);*/
-
 	const startRace = () => {
 		dispatch(setMyTrailData(initialMyTrailData));
 		dispatch(changeGameState(GameState.raceStart));

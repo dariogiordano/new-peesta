@@ -12,9 +12,9 @@ import {
 	setDataUrl,
 } from "./drawBoardSlice";
 
-import { getGrid, rgbToHex } from "./drawBoardAPI";
+import { getGrid, hasNoInnerPoints, rgbToHex } from "./drawBoardAPI";
 import { changeGameState, selectGameState } from "../dashBoard/dashBoardSlice";
-import { setTrackData, selectRaceLaps } from "../grid/gridSlice";
+import { setTrackData, selectRaceLaps, setAlertMsg } from "../grid/gridSlice";
 
 const DrawBoard = () => {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -64,26 +64,37 @@ const DrawBoard = () => {
 						ctx
 					);
 					gridPromise.then(function (result) {
-						for (let w = CELL_SIZE; w < width; w += CELL_SIZE) {
-							for (let h = CELL_SIZE; h < height; h += CELL_SIZE) {
-								let p = ctx.getImageData(w, h, 1, 1).data;
-								let hex: string | null =
-									"#" + ("000000" + rgbToHex(p[0], p[1], p[2])).slice(-6);
+						//check se la pista è disegnata bene, per farlo controllo se nella grid creata ci sono dei 2
+						if (hasNoInnerPoints(result.grid)) {
+							addBorder(ctx, width, height);
+							dispatch(
+								setAlertMsg(
+									"Your track is not valid. Please draw a loop (whitin the red borders!)"
+								)
+							);
+							dispatch(changeGameState(GameState.draw));
+						} else {
+							dispatch(setAlertMsg(""));
+							for (let w = CELL_SIZE; w < width; w += CELL_SIZE) {
+								for (let h = CELL_SIZE; h < height; h += CELL_SIZE) {
+									let p = ctx.getImageData(w, h, 1, 1).data;
+									let hex: string | null =
+										"#" + ("000000" + rgbToHex(p[0], p[1], p[2])).slice(-6);
 
-								if (hex === TRACK_COLOR) {
-									ctx.fillStyle = "#f0f0f0";
-									ctx.fillRect(w, h, 1, 1);
-								} else {
-									ctx.fillStyle = "#222222";
-									ctx.fillRect(w, h, 1, 1);
+									if (hex === TRACK_COLOR) {
+										ctx.fillStyle = "#f0f0f0";
+										ctx.fillRect(w, h, 1, 1);
+									} else {
+										ctx.fillStyle = "#222222";
+										ctx.fillRect(w, h, 1, 1);
+									}
 								}
 							}
-						}
-						if (canvas) {
+
 							const newTrackData: TrackData = {
 								dimensions: { w: width, h: height },
 								grid: result.grid,
-								imgData: canvas.toDataURL(),
+								imgData: (canvas as HTMLCanvasElement).toDataURL(),
 								raceLaps,
 								startLane: null,
 							};

@@ -61,6 +61,7 @@ export const gridSlice = createSlice({
 			state.myTrailData = initialState.myTrailData;
 			state.trackData = initialState.trackData;
 			state.alertMsg = initialState.alertMsg;
+			state.opponentTrailData = undefined;
 		},
 
 		setPlayerMoving: (state, action: PayloadAction<string>) => {

@@ -38,7 +38,7 @@ io.on("connection", (socket) => {
 			let match = {
 				trackData,
 				roomName: newRoomName,
-				player1: { id: socket.id },
+				player1: socket.id,
 			};
 			matches.push(match);
 			console.log(
@@ -48,8 +48,15 @@ io.on("connection", (socket) => {
 			io.to(newRoomName).emit("setPlayer1", newRoomName, socket.id);
 		} else {
 			let match = matches.find((match) => match.roomName === roomName);
+
 			if (match) {
-				match.player2 = { id: socket.id };
+				if (match.player2) {
+					console.log(match.player2);
+					io.to(newRoomName).emit("error", match.player2);
+					return;
+				}
+
+				match.player2 = socket.id;
 				console.log(
 					`Player 2 registered. Room Name: ${socket.roomName} Player ID: ${socket.id}`
 				);
@@ -60,7 +67,6 @@ io.on("connection", (socket) => {
 
 	socket.on("moved", (point) => {
 		console.log(`Update room n° ${socket.roomName}`);
-		console.log(`new point ${point.x} ${point.y}`);
 		io.to(socket.roomName).emit("update", socket.id, point);
 	});
 
@@ -79,15 +85,14 @@ io.on("connection", (socket) => {
 		io.to(socket.roomName).emit("draw", socket.id, point);
 	});
 
-	socket.on("player will unregister", () => {
-		matches = matches.filter((match) => match.roomName !== socket.roomName);
+	socket.on("playerWillUnregister", () => {
 		console.log(`User from room n° ${socket.roomName} disconnected`);
 		socket.leftRoom = true;
 		socket.disconnect();
 	});
 	socket.on("disconnect", () => {
+		console.log("disconnect ", socket.id);
 		//rimuovo il match dalla lista dei match registrati
-		if (socket.leftRoom) io.to(socket.roomName).emit("left alone");
-		else io.to(socket.roomName).emit("connection lost");
+		io.to(socket.roomName).emit("leftAlone");
 	});
 });

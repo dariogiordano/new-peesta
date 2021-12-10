@@ -50,6 +50,19 @@ export function recursiveCleanGrid(
 	else return grid;
 }
 
+export function hasNoInnerPoints(grid: IGrid): boolean {
+	let pointsQuantity = 0;
+	grid.forEach((row: GridRow, indexV: number) => {
+		row.forEach((cell, indexH) => {
+			if (cell === 2) {
+				pointsQuantity++;
+			}
+		});
+	});
+
+	return pointsQuantity === 0;
+}
+
 export function getGrid(
 	canvas: any,
 	cellSize: number,
