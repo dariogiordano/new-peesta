@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import Button from "../../app/UIComponents/Button";
 import {
@@ -12,7 +12,13 @@ import {
 import { selectGameState } from "./dashBoardSlice";
 import StyledDashBoard from "./styled";
 import { changeGameState } from "./dashBoardSlice";
-import { BG_COLOR, GameState, RaceState, TRACK_COLOR } from "../constants";
+import {
+	BG_COLOR,
+	GameState,
+	RaceEndState,
+	RaceState,
+	TRACK_COLOR,
+} from "../constants";
 import ColorButton from "../../app/UIComponents/ColorButton";
 import Slider from "../../app/UIComponents/Slider";
 import {
@@ -29,6 +35,7 @@ import { useNavigate } from "react-router";
 import CopyToClipboard from "../../app/UIComponents/CopyToClipboard";
 import {
 	selectMyPlayerId,
+	selectRaceEndState,
 	selectRaceState,
 	selectRoomName,
 } from "../socketClient/socketClientSlice";
@@ -46,20 +53,25 @@ const DashBoard = () => {
 	const roomName = useAppSelector(selectRoomName);
 	const myId = useAppSelector(selectMyPlayerId);
 	const raceState = useAppSelector(selectRaceState);
+	const raceEndState = useAppSelector(selectRaceEndState);
 
-	useEffect(() => {
+	/*useEffect(() => {
+		//determina cosa succede dopo il traguardo o dopo l'ultima mossa possibile per cercare di pareggiare
 		if (myTrailData.currentLap === raceLaps + 1) {
-			endRace();
-			dispatch(changeGameState(GameState.trainingEnd));
+			if (gameState === GameState.trainingStart)
+				dispatch(changeGameState(GameState.trainingEnd));
+			if (gameState === GameState.raceStart)
+				dispatch(changeGameState(GameState.raceEnd));
+			if (raceState === RaceState.lastChanceToDraw)
+				dispatch(setRaceEndState(RaceEndState.draw));
+		} else if (raceState === RaceState.lastChanceToDraw) {
+			dispatch(setRaceEndState(RaceEndState.lost));
 		}
-	}, [dispatch, myTrailData.currentLap, raceLaps]);
+	}, [dispatch, myTrailData.currentLap, raceLaps, gameState, raceState]);*/
 
 	const startRace = () => {
+		dispatch(setMyTrailData(initialMyTrailData));
 		dispatch(changeGameState(GameState.raceStart));
-		//TODO: socket logic
-	};
-	const endRace = () => {
-		//TODO: socket logic
 	};
 
 	const backToDraw = () => {
@@ -146,6 +158,7 @@ const DashBoard = () => {
 					<Button text="START RACE!" onButtonClick={() => startRace()}></Button>
 				</>
 			)}
+
 			{gameState === GameState.raceStart && (
 				<>
 					{raceState === RaceState.waitingOpponentStart && (
@@ -153,19 +166,30 @@ const DashBoard = () => {
 							textToCopy={`${window.location.protocol}//${window.location.host}/${roomName}/${myId}`}
 						/>
 					)}
-					{(raceState === RaceState.moving ||
-						raceState === RaceState.waitingOpponentMove) && (
-						<div className="no-select">
-							<div>
-								LAP:{myTrailData.currentLap}/{raceLaps}
-							</div>
-							<div>GEAR:{myTrailData.gear}</div>
-							<div>MOVES:{myTrailData.movesNumber}</div>
-						</div>
+
+					{raceState === RaceState.moving && (
+						<div className="no-select"> Make your move!</div>
+					)}
+					{raceState === RaceState.waitingOpponentMove && (
+						<div className="no-select"> Wait for your opponent</div>
+					)}
+					{raceState === RaceState.lastChanceToDraw && (
+						<div className="no-select">Your last chance to draw...</div>
 					)}
 				</>
 			)}
-			{gameState === GameState.trainingStart && (
+			{gameState === GameState.raceEnd && (
+				<div className="no-select">
+					{raceEndState === RaceEndState.waitingOpponentFinish && (
+						<div>Good job! Wait for your opponent's last chance to draw...</div>
+					)}
+					{raceEndState === RaceEndState.won && <div> YOU WON!</div>}
+					{raceEndState === RaceEndState.lost && <div> YOU LOST!</div>}
+					{raceEndState === RaceEndState.draw && <div> IT'S A DRAW!</div>}
+				</div>
+			)}
+			{(gameState === GameState.trainingEnd ||
+				gameState === GameState.trainingStart) && (
 				<>
 					<Button
 						text="RESTART TRAINING"
@@ -176,27 +200,20 @@ const DashBoard = () => {
 						text="DRAW ANOTHER TRACK"
 						onButtonClick={() => backToDraw()}
 					></Button>
-					<div className="no-select">
-						<div>
-							LAP:{myTrailData.currentLap}/{raceLaps}
-						</div>
-						<div>GEAR:{myTrailData.gear}</div>
-						<div>MOVES:{myTrailData.movesNumber}</div>
+				</>
+			)}
+
+			{(gameState === GameState.raceStart ||
+				gameState === GameState.trainingStart) && (
+				<div className="no-select">
+					<div>
+						LAP:{myTrailData.currentLap}/{raceLaps}
 					</div>
-				</>
+					<div>GEAR:{myTrailData.gear}</div>
+					<div>MOVES:{myTrailData.movesNumber}</div>
+				</div>
 			)}
-			{gameState === GameState.trainingEnd && (
-				<>
-					<Button
-						text="START AGAIN"
-						onButtonClick={() => startAgain()}
-					></Button>
-					<Button
-						text="DRAW ANOTHER TRACK"
-						onButtonClick={() => backToDraw()}
-					></Button>
-				</>
-			)}
+
 			<div className="alert-box">{alertMsg}</div>
 		</StyledDashBoard>
 	);

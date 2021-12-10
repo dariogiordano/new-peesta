@@ -36,7 +36,7 @@ export const initialMyTrailData: MyTrailData = {
 const initialState: matchState = {
 	playerMoving: null,
 	trackData: {
-		raceLaps: 2,
+		raceLaps: 1,
 		dimensions: { w: 100, h: 100 },
 		startLane: {
 			arrowPoints: null,

@@ -5,14 +5,16 @@ import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
 	CELL_SIZE,
 	GameState,
+	RaceEndState,
 	RaceState,
 	TRAIL_COLOR,
 	TRAIL_LENGTH,
 } from "../constants";
-import { selectGameState } from "../dashBoard/dashBoardSlice";
+import { changeGameState, selectGameState } from "../dashBoard/dashBoardSlice";
 import {
 	setRaceState,
 	selectRaceState,
+	setRaceEndState,
 } from "../socketClient/socketClientSlice";
 import { Direction, MoveStatus, PathPoint, Point, Segment } from "../types";
 import {
@@ -36,6 +38,8 @@ import {
 	setMyTrailPoints,
 	setMyMovesNumber,
 	selectMyTrailData,
+	selectOpponentTrailData,
+	selectRaceLaps,
 } from "./gridSlice";
 import StyledGrid from "./styled";
 import SvgBoard from "./svgBoard";
@@ -46,10 +50,10 @@ const Grid = () => {
 	const startLaneStartRef = useRef<Point>({ x: 50000, y: 50000 });
 	const myTrailData = useAppSelector(selectMyTrailData);
 	const trackData = useAppSelector(selectTrackData);
-
+	const opponentTrailData = useAppSelector(selectOpponentTrailData);
 	const dispatch = useAppDispatch();
 	const lastPointRef = useRef<Point>({ x: 0, y: 0 });
-
+	const raceLaps = useAppSelector(selectRaceLaps);
 	const navigate = useNavigate();
 	const directionHistoryRef = useRef<Direction>("");
 	useEffect(() => {
@@ -58,6 +62,15 @@ const Grid = () => {
 			dispatch(setAlertMsg(`hai impiegato ${myTrailData.movesNumber} mosse`));
 		}
 	});
+
+	const isRacing = (): boolean => {
+		return (
+			gameState === GameState.trainingStart ||
+			(gameState === GameState.raceStart &&
+				(raceState === RaceState.moving ||
+					raceState === RaceState.lastChanceToDraw))
+		);
+	};
 
 	const handleClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
 		const point: Point = {
@@ -84,10 +97,8 @@ const Grid = () => {
 				dispatch(setMyIsMoving(false));
 				dispatch(setAlertMsg(""));
 			}
-		} else if (
-			gameState === GameState.trainingStart ||
-			(gameState === GameState.raceStart && raceState === RaceState.moving)
-		) {
+		} else if (isRacing()) {
+			dispatch(setMyStartLanePosition(null));
 			if (!myTrailData.isMoving) {
 				//registro lastPoint per attivare il sistema che evita
 				//la ripetizione dell'evento in caso di movimento
@@ -159,14 +170,7 @@ const Grid = () => {
 						dispatch(setMyCurrentLap(newCurrentLap));
 					}
 					dispatch(setMyIsMoving(false));
-					/*this tells system tha the move ended so the info
-					can be emitted via socket to the opponent*/
-					if (
-						gameState === GameState.raceStart &&
-						raceState === RaceState.moving
-					) {
-						dispatch(setRaceState(RaceState.moved));
-					}
+
 					dispatch(
 						setAlertMsg(
 							moveDetails.finishLineInfo === "incident at cut line"
@@ -176,6 +180,29 @@ const Grid = () => {
 					);
 					dispatch(setMyTrailPoints(moveDetails.points));
 					dispatch(setMyGear(moveDetails.isCrash ? 0 : moveDetails.gear));
+
+					/*this tells system tha the move ended so the info
+					can be emitted via socket to the opponent*/
+
+					if (newCurrentLap === raceLaps + 1) {
+						if (gameState === GameState.trainingStart)
+							dispatch(changeGameState(GameState.trainingEnd));
+						if (gameState === GameState.raceStart)
+							dispatch(changeGameState(GameState.raceEnd));
+						if (raceState === RaceState.lastChanceToDraw)
+							dispatch(setRaceEndState(RaceEndState.draw));
+					} else if (
+						gameState === GameState.raceStart &&
+						raceState === RaceState.lastChanceToDraw
+					) {
+						dispatch(setRaceEndState(RaceEndState.lost));
+						dispatch(setRaceState(RaceState.end));
+					} else if (
+						gameState === GameState.raceStart &&
+						raceState === RaceState.moving
+					) {
+						dispatch(setRaceState(RaceState.moved));
+					}
 				}
 			}
 		}
@@ -188,31 +215,30 @@ const Grid = () => {
 		};
 
 		if (
-			trackData.startLane &&
-			(gameState === GameState.trainingStart ||
-				(gameState === GameState.raceStart &&
-					raceState === RaceState.moving)) &&
-			myTrailData.trailPoints.length === 0 &&
-			isPointInSegment(point, trackData.startLane.arrowPoints as Segment)
+			e.clientX >= lastPointRef.current.x - CELL_SIZE / 2 &&
+			e.clientX < lastPointRef.current.x + CELL_SIZE / 2 &&
+			e.clientY >= lastPointRef.current.y - CELL_SIZE / 2 &&
+			e.clientY < lastPointRef.current.y + CELL_SIZE / 2
 		) {
-			dispatch(setMyStartLanePosition(point));
-		} else if (
-			gameState === GameState.trainingStart ||
-			(gameState === GameState.raceStart && raceState === RaceState.moving)
-		) {
-			dispatch(setMyStartLanePosition(null));
+			return;
 		}
 
+		lastPointRef.current = point;
 		if (
-			myTrailData.isMoving &&
-			!(
-				e.clientX >= lastPointRef.current.x - CELL_SIZE / 2 &&
-				e.clientX < lastPointRef.current.x + CELL_SIZE / 2 &&
-				e.clientY >= lastPointRef.current.y - CELL_SIZE / 2 &&
-				e.clientY < lastPointRef.current.y + CELL_SIZE / 2
-			)
+			trackData.startLane &&
+			isRacing() &&
+			myTrailData.trailPoints.length === 0
 		) {
-			lastPointRef.current = point;
+			dispatch(
+				setMyStartLanePosition(
+					isPointInSegment(point, trackData.startLane.arrowPoints as Segment)
+						? point
+						: null
+				)
+			);
+		}
+
+		if (myTrailData.isMoving) {
 			if (gameState === GameState.drawFinishLine) {
 				var pointAndDir = getPointAndDir(startLaneStartRef.current, point);
 				dispatch(
@@ -224,18 +250,7 @@ const Grid = () => {
 						)
 					)
 				);
-			} else if (
-				trackData.startLane &&
-				(gameState === GameState.trainingStart ||
-					(gameState === GameState.raceStart && raceState === RaceState.moving))
-			) {
-				if (
-					isPointInSegment(point, trackData.startLane.arrowPoints as Segment) &&
-					myTrailData.trailPoints.length === 0
-				) {
-					dispatch(setMyStartLanePosition(point));
-				}
-
+			} else if (trackData.startLane && isRacing()) {
 				let newTrailPoints: PathPoint[] = getMoveDetails(
 					myTrailData.trailPoints,
 					point,
@@ -254,6 +269,7 @@ const Grid = () => {
 	let arrows: JSX.Element[] = [];
 	let circles: (JSX.Element | never[])[] = [];
 	let startCircle: JSX.Element;
+	let opponentCircle: JSX.Element;
 	let lines: (JSX.Element | never[])[] = [];
 
 	if (myTrailData.startLanePosition) {
@@ -271,6 +287,22 @@ const Grid = () => {
 			/>
 		);
 	} else startCircle = <></>;
+
+	if (opponentTrailData) {
+		let style: CSSProperties = {};
+		style.stroke = "white";
+		style.strokeWidth = 2;
+		style.opacity = 1;
+		opponentCircle = (
+			<circle
+				key={"opponentCircle"}
+				cx={opponentTrailData.trailPoint.x}
+				cy={opponentTrailData.trailPoint.y}
+				r="6"
+				style={style}
+			/>
+		);
+	} else opponentCircle = <></>;
 
 	if (myTrailData.trailPoints.length > 0) {
 		let filtered = myTrailData.trailPoints.filter(
@@ -334,6 +366,7 @@ const Grid = () => {
 					{arrows}
 					{startCircle}
 				</g>
+				{opponentCircle}
 				{circles}
 				{lines}
 			</SvgBoard>

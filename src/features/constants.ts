@@ -23,8 +23,16 @@ export enum RaceState {
 	start = "start",
 	waitingOpponentStart = "waitingOpponentStart",
 	waitingOpponentMove = "waitingOpponentMove",
+	lastChanceToDraw = "lastChanceToDraw",
 	moving = "makingMove",
 	moved = "moved",
+	end = "end",
+}
+
+export enum RaceEndState {
+	racing = "racing",
+	waitingOpponentFinish = "waitingOpponentFinish",
 	won = "won",
 	lost = "lost",
+	draw = "draw",
 }

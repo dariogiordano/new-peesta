@@ -4,13 +4,14 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { RootState } from "../../app/store";
-import { RaceState } from "../constants";
+import { RaceEndState, RaceState } from "../constants";
 
 export interface DashBoardState {
 	roomName: string | null;
 	myPlayerId: string | null;
 	opponentId: string | null;
 	raceState: RaceState;
+	raceEndState: RaceEndState;
 }
 
 const initialState: DashBoardState = {
@@ -18,12 +19,16 @@ const initialState: DashBoardState = {
 	opponentId: null,
 	roomName: null,
 	raceState: RaceState.start,
+	raceEndState: RaceEndState.racing,
 };
 
 export const socketClientSlice = createSlice({
 	name: "socketClient",
 	initialState,
 	reducers: {
+		setRaceEndState: (state, action: PayloadAction<RaceEndState>) => {
+			state.raceEndState = action.payload;
+		},
 		setMyPlayerId: (state, action: PayloadAction<string>) => {
 			state.myPlayerId = action.payload;
 		},
@@ -40,8 +45,13 @@ export const socketClientSlice = createSlice({
 	},
 });
 
-export const { setMyPlayerId, setOpponentId, setRoomName, setRaceState } =
-	socketClientSlice.actions;
+export const {
+	setMyPlayerId,
+	setOpponentId,
+	setRoomName,
+	setRaceState,
+	setRaceEndState,
+} = socketClientSlice.actions;
 export const selectMyPlayerId = (state: RootState) =>
 	state.socketClient.myPlayerId;
 export const selectRaceState = (state: RootState) =>
@@ -49,4 +59,6 @@ export const selectRaceState = (state: RootState) =>
 export const selectOpponentId = (state: RootState) =>
 	state.socketClient.opponentId;
 export const selectRoomName = (state: RootState) => state.socketClient.roomName;
+export const selectRaceEndState = (state: RootState) =>
+	state.socketClient.raceEndState;
 export default socketClientSlice.reducer;

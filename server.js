@@ -64,14 +64,19 @@ io.on("connection", (socket) => {
 		io.to(socket.roomName).emit("update", socket.id, point);
 	});
 
-	socket.on("won", (state) => {
-		state.matchStatus = "lost";
-		state.grid = state.grid.map((row) => {
-			return row.map((cell) => {
-				return cell === "win" ? "lost" : cell;
-			});
-		});
-		io.to(state.roomName).emit("update", state);
+	socket.on("firstToFinishRace", (point) => {
+		console.log("firstToFinishRace: ", socket.id);
+		io.to(socket.roomName).emit("lastChance", socket.id, point);
+	});
+
+	socket.on("lost", (point) => {
+		console.log("won");
+		io.to(socket.roomName).emit("won", socket.id, point);
+	});
+
+	socket.on("draw", (point) => {
+		console.log("draw ", socket.id);
+		io.to(socket.roomName).emit("draw", socket.id, point);
 	});
 
 	socket.on("player will unregister", () => {
