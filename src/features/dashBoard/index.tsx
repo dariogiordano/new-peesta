@@ -29,6 +29,7 @@ import {
 	setMyTrailData,
 	initialMyTrailData,
 	selectMyTrailData,
+	selectStartLane,
 } from "../grid/gridSlice";
 import { useNavigate } from "react-router";
 
@@ -54,10 +55,25 @@ const DashBoard = () => {
 	const myId = useAppSelector(selectMyPlayerId);
 	const raceState = useAppSelector(selectRaceState);
 	const raceEndState = useAppSelector(selectRaceEndState);
-
+	const startLane = useAppSelector(selectStartLane);
 	const startRace = () => {
-		dispatch(setMyTrailData(initialMyTrailData));
-		dispatch(changeGameState(GameState.raceStart));
+		if (startLane && startLane.points && startLane.points.length > 0) {
+			dispatch(setAlertMsg(""));
+
+			dispatch(setMyTrailData(initialMyTrailData));
+			dispatch(changeGameState(GameState.raceStart));
+		} else {
+			dispatch(setAlertMsg("Please add a start lane."));
+		}
+	};
+
+	const startTraining = () => {
+		if (startLane && startLane.points && startLane.points.length > 0) {
+			dispatch(changeGameState(GameState.trainingStart));
+			dispatch(setAlertMsg(""));
+		} else {
+			dispatch(setAlertMsg("Please add a start lane."));
+		}
 	};
 
 	const backToDraw = () => {
@@ -95,7 +111,7 @@ const DashBoard = () => {
 				(gameState === GameState.draw && (
 					<>
 						<Button
-							text="DRAW FINISH LINE"
+							text="DRAW START LANE"
 							onButtonClick={() =>
 								dispatch(changeGameState(GameState.drawFinishLine))
 							}
@@ -137,9 +153,7 @@ const DashBoard = () => {
 				<>
 					<Button
 						text="DO YOUR TRAINING"
-						onButtonClick={() =>
-							dispatch(changeGameState(GameState.trainingStart))
-						}
+						onButtonClick={() => startTraining()}
 					></Button>
 					<Button text="START RACE!" onButtonClick={() => startRace()}></Button>
 				</>

@@ -10,6 +10,9 @@ const StyledGrid = styled.div<GridProps>`
 	width: ${(props) => props.dimensions.w}px;
 	height: ${(props) => props.dimensions.h}px;
 	background-image: url(${(props) => props.bg || ""});
+	background-position: top;
+	background-repeat: no-repeat; /* Do not repeat the image */
+	background-size: contain; /* Resize the background image to cover the entire container */
 `;
 
 export default StyledGrid;

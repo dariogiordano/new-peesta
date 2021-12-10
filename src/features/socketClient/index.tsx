@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { io, Socket } from "socket.io-client";
 
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
