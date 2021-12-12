@@ -1,7 +1,7 @@
-import React, { useRef, useLayoutEffect, useEffect } from "react";
+import React, { useRef, useLayoutEffect } from "react";
 import StyledDrawBoard from "./styled";
 import { BG_COLOR, CELL_SIZE, GameState, TRACK_COLOR } from "../constants";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Point, TrackData } from "../types";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
@@ -15,7 +15,8 @@ import {
 import { getGrid, hasNoInnerPoints, rgbToHex } from "./drawBoardAPI";
 import { changeGameState, selectGameState } from "../dashBoard/dashBoardSlice";
 import { setTrackData, selectRaceLaps, setAlertMsg } from "../grid/gridSlice";
-
+const width: number = document.documentElement.clientWidth * 0.8;
+const height: number = document.documentElement.clientHeight;
 const DrawBoard = () => {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const dispatch = useAppDispatch();
@@ -23,8 +24,7 @@ const DrawBoard = () => {
 	let last_mouse = useRef<Point>({ x: 0, y: 0 });
 	let down = useRef<Boolean>(false);
 	const navigate = useNavigate();
-	const width: number = window.innerWidth - 240;
-	const height: number = window.innerHeight;
+
 	const raceLaps = useAppSelector(selectRaceLaps);
 	const brushColor = useAppSelector(selectColor);
 	const brushSize = useAppSelector(selectSize);
@@ -157,8 +157,8 @@ const DrawBoard = () => {
 	const handleMouseDown = (
 		e: React.MouseEvent<HTMLCanvasElement, MouseEvent>
 	) => {
-		mouse.current.x = e.pageX;
-		mouse.current.y = e.pageY;
+		mouse.current.x = e.clientX - e.currentTarget.getBoundingClientRect().left;
+		mouse.current.y = e.clientY - e.currentTarget.getBoundingClientRect().top;
 
 		if (!e.shiftKey || mouse.current.x === undefined) {
 			last_mouse.current.x = mouse.current.x;
@@ -207,14 +207,16 @@ const DrawBoard = () => {
 			if (!e.shiftKey && down.current) {
 				last_mouse.current.x = mouse.current.x;
 				last_mouse.current.y = mouse.current.y;
-				mouse.current.x = e.pageX;
-				mouse.current.y = e.pageY;
+				mouse.current.x =
+					e.clientX - e.currentTarget.getBoundingClientRect().left;
+				mouse.current.y =
+					e.clientY - e.currentTarget.getBoundingClientRect().top;
 			}
 			if (down.current) onPaint(ctx);
 		}
 	};
 	return (
-		<StyledDrawBoard cursorSize={brushSize}>
+		<StyledDrawBoard cursorSize={brushSize} cWidth={width} cHeight={height}>
 			<canvas
 				ref={canvasRef}
 				onMouseDown={(e) => handleMouseDown(e)}

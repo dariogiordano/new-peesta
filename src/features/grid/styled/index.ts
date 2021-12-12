@@ -7,12 +7,15 @@ interface GridProps {
 }
 const StyledGrid = styled.div<GridProps>`
 	position: relative;
-	width: ${(props) => props.dimensions.w}px;
-	height: ${(props) => props.dimensions.h}px;
-	background-image: url(${(props) => props.bg || ""});
-	background-position: top;
+	display: flex;
+	width: 80%;
+	//background-image: url(${(props) => props.bg || ""});
+	background-position: top left;
 	background-repeat: no-repeat; /* Do not repeat the image */
-	background-size: contain; /* Resize the background image to cover the entire container */
+	overflow: auto;
+	img {
+		position: absolute;
+	}
 `;
 
 export default StyledGrid;

@@ -1,10 +1,18 @@
 import styled from "styled-components";
-export interface CursorProps {
+interface drProps {
 	cursorSize: number;
+	cWidth: number;
+	cHeight: number;
 }
 
-const StyledDrawBoard = styled.div<CursorProps>`
+const StyledDrawBoard = styled.div<drProps>`
+	overflow: auto;
+	width: 80%;
+	box-sizing: border-box;
+	display: flex;
 	canvas {
+		width: ${(props) => props.cWidth}px;
+		height: ${(props) => props.cHeight}px;
 		cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"
 		height="${(props) => props.cursorSize}"
 		viewBox="0 0 ${(props) => props.cursorSize} ${(props) => props.cursorSize}"

@@ -657,7 +657,7 @@ export function isTrackRecursive(
 	var p = getNewPointFromGear(point, direction, i);
 	var pValue =
 		grid[(p.y - CELL_SIZE) / CELL_SIZE][(p.x - CELL_SIZE) / CELL_SIZE];
-	if (pValue === 0 || pValue === 2) {
+	if (pValue !== GridValue.track) {
 		return p;
 	} else {
 		i++;
@@ -672,8 +672,8 @@ export function isValidStartLane(startLane: StartLane, grid: IGrid) {
 	];
 	return (
 		Object.keys(startLane).length > 0 &&
-		valuesArray.indexOf(0) >= 0 &&
-		valuesArray.indexOf(2) >= 0
+		valuesArray.indexOf(GridValue.outer) >= 0 &&
+		valuesArray.indexOf(GridValue.inner) >= 0
 	);
 }
 
@@ -742,28 +742,29 @@ export function getGridValue(point: Point, grid: IGrid): GridValue {
 		return grid[Math.round(point.y / CELL_SIZE) - 1][
 			Math.round(point.x / CELL_SIZE) - 1
 		];
-	else return 0;
+	else return GridValue.outer;
 }
 
 export function getCrashInfo(move: Move, grid: IGrid): CrashInfo {
 	let points: Segment = getPointsOfSegment(move);
 	let gridValues: GridValue[] = getGridValuesOfSegment(move, grid);
-	let redPoints = gridValues.filter((point) => point !== 1);
+	let redPoints = gridValues.filter((point) => point !== GridValue.track);
 	let lastGoodPoint;
 	/*se non trovo mai il colore della pista,
 vuol dire che sto partendo dallo sfondo verso lo sfondo.
 quindi non valorizzo il punto di ripartenza per bloccare la mossa */
-	if (gridValues.indexOf(1) !== -1) {
+	if (gridValues.indexOf(GridValue.track) !== -1) {
 		let index =
-			gridValues.lastIndexOf(0) !== -1
-				? gridValues.lastIndexOf(0)
-				: gridValues.lastIndexOf(2);
+			gridValues.lastIndexOf(GridValue.outer) !== -1
+				? gridValues.lastIndexOf(GridValue.outer)
+				: gridValues.lastIndexOf(GridValue.inner);
 		lastGoodPoint = points[index];
 	}
 	return {
 		yesItIs:
 			move.gear > 0 &&
-			(redPoints.length > MAX_OFFROAD_LENGTH || gridValues[0] !== 1),
+			(redPoints.length > MAX_OFFROAD_LENGTH ||
+				gridValues[0] !== GridValue.track),
 		lastGoodPoint,
 	};
 }

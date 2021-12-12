@@ -16,7 +16,15 @@ import {
 	selectRaceState,
 	setRaceEndState,
 } from "../socketClient/socketClientSlice";
-import { Direction, MoveStatus, PathPoint, Point, Segment } from "../types";
+import {
+	Direction,
+	GridValue,
+	MoveStatus,
+	PathPoint,
+	Point,
+	Segment,
+	StartLane,
+} from "../types";
 import {
 	getGridValue,
 	getMoveDetails,
@@ -74,14 +82,26 @@ const Grid = () => {
 
 	const handleClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
 		const point: Point = {
-			x: Math.floor((e.clientX + CELL_SIZE / 2) / CELL_SIZE) * CELL_SIZE,
-			y: Math.floor((e.clientY + CELL_SIZE / 2) / CELL_SIZE) * CELL_SIZE,
+			x:
+				Math.floor(
+					(e.clientX -
+						e.currentTarget.getBoundingClientRect().left +
+						CELL_SIZE / 2) /
+						CELL_SIZE
+				) * CELL_SIZE,
+			y:
+				Math.floor(
+					(e.clientY -
+						e.currentTarget.getBoundingClientRect().top +
+						CELL_SIZE / 2) /
+						CELL_SIZE
+				) * CELL_SIZE,
 		};
 		//disegno della start lane
 		if (gameState === GameState.drawFinishLine) {
 			if (!myTrailData.isMoving) {
 				lastPointRef.current = point;
-				if (getGridValue(point, trackData.grid) === 1) {
+				if (getGridValue(point, trackData.grid) === GridValue.track) {
 					dispatch(setStartLane(null));
 					startLaneStartRef.current = point;
 					dispatch(setMyIsMoving(true));
@@ -96,9 +116,14 @@ const Grid = () => {
 			) {
 				dispatch(setMyIsMoving(false));
 				dispatch(setAlertMsg(""));
+			} else {
+				dispatch(setMyIsMoving(false));
+				dispatch(
+					setAlertMsg("Please add a finish lane that would cross your track")
+				);
+				dispatch(setStartLane(null));
 			}
 		} else if (isRacing()) {
-			dispatch(setMyStartLanePosition(null));
 			if (!myTrailData.isMoving) {
 				//registro lastPoint per attivare il sistema che evita
 				//la ripetizione dell'evento in caso di movimento
@@ -210,8 +235,20 @@ const Grid = () => {
 
 	const handleMove = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
 		const point: Point = {
-			x: Math.floor((e.clientX + CELL_SIZE / 2) / CELL_SIZE) * CELL_SIZE,
-			y: Math.floor((e.clientY + CELL_SIZE / 2) / CELL_SIZE) * CELL_SIZE,
+			x:
+				Math.floor(
+					(e.clientX -
+						e.currentTarget.getBoundingClientRect().left +
+						CELL_SIZE / 2) /
+						CELL_SIZE
+				) * CELL_SIZE,
+			y:
+				Math.floor(
+					(e.clientY -
+						e.currentTarget.getBoundingClientRect().top +
+						CELL_SIZE / 2) /
+						CELL_SIZE
+				) * CELL_SIZE,
 		};
 
 		if (
@@ -224,14 +261,23 @@ const Grid = () => {
 		}
 
 		lastPointRef.current = point;
-		if (
-			trackData.startLane &&
-			isRacing() &&
-			myTrailData.trailPoints.length === 0
-		) {
+
+		//Aggiunge un cerchio di posizione attorno al punto per evidenziare la posizione quando sto piazzando la linea di partenza
+		if (gameState === GameState.drawFinishLine) {
 			dispatch(
 				setMyStartLanePosition(
-					isPointInSegment(point, trackData.startLane.arrowPoints as Segment)
+					getGridValue(point, trackData.grid) === GridValue.track ? point : null
+				)
+			);
+		}
+		//Aggiunge un cerchio di posizione attorno al punto sulla linea di partenza per evidenziare la posizione quando sto iniziando la gara
+		if (isRacing() && myTrailData.trailPoints.length === 0) {
+			dispatch(
+				setMyStartLanePosition(
+					isPointInSegment(
+						point,
+						(trackData.startLane as StartLane).arrowPoints as Segment
+					)
 						? point
 						: null
 				)
@@ -239,6 +285,8 @@ const Grid = () => {
 		}
 
 		if (myTrailData.isMoving) {
+			//rimuove il cerchio di posizione
+			dispatch(setMyStartLanePosition(null));
 			if (gameState === GameState.drawFinishLine) {
 				var pointAndDir = getPointAndDir(startLaneStartRef.current, point);
 				dispatch(
@@ -353,13 +401,21 @@ const Grid = () => {
 		});
 
 	return (
-		<StyledGrid
-			dimensions={trackData.dimensions}
-			bg={trackData.imgData}
-			onClick={(e) => handleClick(e)}
-			onMouseMove={(e) => handleMove(e)}
-		>
+		<StyledGrid dimensions={trackData.dimensions} bg={trackData.imgData}>
+			<img
+				alt="bg-path"
+				src={trackData.imgData as string}
+				width={trackData.dimensions.w}
+				height={trackData.dimensions.h}
+			/>
 			<SvgBoard
+				onSvgClick={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) =>
+					handleClick(e)
+				}
+				onSvgMouseMove={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) =>
+					handleMove(e)
+				}
+				dimensions={trackData.dimensions}
 				viewBox={"0 0 " + trackData.dimensions.w + " " + trackData.dimensions.h}
 			>
 				<g id="startLane">

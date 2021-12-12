@@ -19,7 +19,11 @@ export type Gear = 0 | 1 | 2 | 3 | 4 | 5;
 
 export type IGrid = Array<GridRow>;
 export type GridRow = Array<GridValue>;
-export type GridValue = 0 | 1 | 2;
+export enum GridValue {
+	outer = "outer",
+	track = "track",
+	inner = "inner",
+}
 
 export interface Move {
 	point: Point;
