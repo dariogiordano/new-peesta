@@ -29,14 +29,14 @@ export const socketClientSlice = createSlice({
 		setRaceEndState: (state, action: PayloadAction<RaceEndState>) => {
 			state.raceEndState = action.payload;
 		},
-		setMyPlayerId: (state, action: PayloadAction<string>) => {
+		setMyPlayerId: (state, action: PayloadAction<string | null>) => {
 			state.myPlayerId = action.payload;
 		},
 
-		setOpponentId: (state, action: PayloadAction<string>) => {
+		setOpponentId: (state, action: PayloadAction<string | null>) => {
 			state.opponentId = action.payload;
 		},
-		setRoomName: (state, action: PayloadAction<string>) => {
+		setRoomName: (state, action: PayloadAction<string | null>) => {
 			state.roomName = action.payload;
 		},
 		setRaceState: (state, action: PayloadAction<RaceState>) => {

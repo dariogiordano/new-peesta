@@ -80,19 +80,20 @@ io.on("connection", (socket) => {
 		io.to(socket.roomName).emit("won", socket.id, point);
 	});
 
+	socket.on("won", (point) => {
+		console.log("lost");
+		io.to(socket.roomName).emit("lost", socket.id, point);
+	});
+
 	socket.on("draw", (point) => {
 		console.log("draw ", socket.id);
 		io.to(socket.roomName).emit("draw", socket.id, point);
 	});
 
-	socket.on("playerWillUnregister", () => {
-		console.log(`User from room n° ${socket.roomName} disconnected`);
-		socket.leftRoom = true;
-		socket.disconnect();
-	});
 	socket.on("disconnect", () => {
 		console.log("disconnect ", socket.id);
-		//rimuovo il match dalla lista dei match registrati
-		io.to(socket.roomName).emit("leftAlone");
+		matches = matches.filter((match) => match.roomName !== socket.roomName);
+		io.to(socket.roomName).emit("leftAlone", socket.id);
+		io.in(socket.roomName).socketsLeave(socket.roomName);
 	});
 });

@@ -25,6 +25,11 @@ export enum GridValue {
 	inner = "inner",
 }
 
+export enum PlayerType {
+	starter = "starter",
+	opponent = "opponent",
+}
+
 export interface Move {
 	point: Point;
 	direction: Direction;

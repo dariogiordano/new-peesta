@@ -12,6 +12,7 @@ import {
 	TrackData,
 	MyTrailData,
 	OpponentTrailData,
+	PlayerType,
 } from "../types";
 
 export type BrushColor = typeof TRACK_COLOR | typeof BG_COLOR;
@@ -22,6 +23,7 @@ export interface matchState {
 	opponentTrailData?: OpponentTrailData;
 	alertMsg: string;
 	playerMoving: string | null;
+	playerType: PlayerType | null;
 }
 
 export const initialMyTrailData: MyTrailData = {
@@ -33,22 +35,25 @@ export const initialMyTrailData: MyTrailData = {
 	startLanePosition: null,
 };
 
-const initialState: matchState = {
-	playerMoving: null,
-	trackData: {
-		raceLaps: 1,
-		dimensions: { w: 100, h: 100 },
-		startLane: {
-			arrowPoints: null,
-			arrows: null,
-			directionOfTravel: null,
-			point1: null,
-			point2: null,
-			points: null,
-		},
-		imgData: null,
-		grid: [],
+const initialrackData: TrackData = {
+	raceLaps: 1,
+	dimensions: { w: 100, h: 100 },
+	startLane: {
+		arrowPoints: null,
+		arrows: null,
+		directionOfTravel: null,
+		point1: null,
+		point2: null,
+		points: null,
 	},
+	imgData: null,
+	grid: [],
+};
+
+const initialState: matchState = {
+	playerType: null,
+	playerMoving: null,
+	trackData: initialrackData,
 	myTrailData: initialMyTrailData,
 	alertMsg: "",
 };
@@ -58,10 +63,14 @@ export const gridSlice = createSlice({
 	initialState,
 	reducers: {
 		resetInitialState: (state) => {
-			state.myTrailData = initialState.myTrailData;
-			state.trackData = initialState.trackData;
-			state.alertMsg = initialState.alertMsg;
+			state.myTrailData = initialMyTrailData;
+			state.trackData = initialrackData;
+			state.alertMsg = "";
 			state.opponentTrailData = undefined;
+			state.playerType = null;
+		},
+		setPlayerType: (state, action: PayloadAction<PlayerType>) => {
+			state.playerType = action.payload;
 		},
 
 		setPlayerMoving: (state, action: PayloadAction<string>) => {
@@ -119,7 +128,9 @@ export const {
 	setMyMovesNumber,
 	setPlayerMoving,
 	setOpponentTrailData,
+	setPlayerType,
 } = gridSlice.actions;
+export const selectPlayerType = (state: RootState) => state.grid.playerType;
 export const selectTrackData = (state: RootState) => state.grid.trackData;
 export const selectPlayerMoving = (state: RootState) => state.grid.playerMoving;
 export const selectMyTrailData = (state: RootState) => state.grid.myTrailData;

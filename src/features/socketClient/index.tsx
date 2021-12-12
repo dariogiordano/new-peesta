@@ -12,20 +12,23 @@ import {
 	setRoomName,
 	setRaceEndState,
 	selectRaceEndState,
+	setOpponentId,
 } from "./socketClientSlice";
 import {
 	resetInitialState,
 	selectMyTrailData,
+	selectPlayerType,
 	selectTrackData,
 	setAlertMsg,
 	setOpponentTrailData,
+	setPlayerType,
 	setTrackData,
 } from "../grid/gridSlice";
 import { changeGameState, selectGameState } from "../dashBoard/dashBoardSlice";
 import { GameState, RaceEndState, RaceState } from "../constants";
 import { useNavigate } from "react-router-dom";
 import { ClientToServerEvents, ServerToClientEvents } from "./types";
-import { OpponentTrailData } from "../types";
+import { OpponentTrailData, PlayerType } from "../types";
 const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io();
 const SocketClient = () => {
 	const dispatch = useAppDispatch();
@@ -38,6 +41,7 @@ const SocketClient = () => {
 	const gameState = useAppSelector(selectGameState);
 	const navigate = useNavigate();
 	const myPlayerId = useAppSelector(selectMyPlayerId);
+	const myPlayerType = useAppSelector(selectPlayerType);
 
 	useEffect(() => {
 		//socket  emit
@@ -47,6 +51,7 @@ const SocketClient = () => {
 		 */
 		if (roomName && opponentId && gameState === GameState.start) {
 			socket.emit("registerPlayer", null, roomName);
+			dispatch(setPlayerType(PlayerType.opponent));
 			dispatch(changeGameState(GameState.raceStart));
 			dispatch(setRaceState(RaceState.waitingOpponentMove));
 		}
@@ -60,7 +65,9 @@ const SocketClient = () => {
 			gameState === GameState.raceStart &&
 			raceState === RaceState.start
 		) {
+			console.log(gameState);
 			socket.emit("registerPlayer", trackData, null);
+			dispatch(setPlayerType(PlayerType.starter));
 			dispatch(setRaceState(RaceState.waitingOpponentStart));
 		}
 
@@ -73,9 +80,17 @@ const SocketClient = () => {
 			gameState === GameState.raceEnd &&
 			raceEndState === RaceEndState.racing
 		) {
-			console.log("firstToFinishRace");
-			socket.emit("firstToFinishRace", myTrailPoint[myTrailPoint.length - 1]);
-			dispatch(setRaceEndState(RaceEndState.waitingOpponentFinish));
+			if (myPlayerType === PlayerType.opponent) {
+				console.log("won");
+				socket.emit("won", myTrailPoint[myTrailPoint.length - 1]);
+				dispatch(changeGameState(GameState.raceEnd));
+				dispatch(setRaceState(RaceState.end));
+				dispatch(setRaceEndState(RaceEndState.won));
+			} else {
+				console.log("firstToFinishRace");
+				socket.emit("firstToFinishRace", myTrailPoint[myTrailPoint.length - 1]);
+				dispatch(setRaceEndState(RaceEndState.waitingOpponentFinish));
+			}
 		}
 		if (
 			gameState === GameState.raceStart &&
@@ -128,6 +143,7 @@ const SocketClient = () => {
 				dispatch(setRaceState(RaceState.lastChanceToDraw));
 			}
 		});
+
 		socket.on("won", (playerIdMoved, trailPoint) => {
 			if (playerIdMoved !== myPlayerId) {
 				const opTrailData: OpponentTrailData = { trailPoint };
@@ -136,6 +152,16 @@ const SocketClient = () => {
 				dispatch(setRaceEndState(RaceEndState.won));
 			}
 		});
+
+		socket.on("lost", (playerIdMoved, trailPoint) => {
+			if (playerIdMoved !== myPlayerId) {
+				const opTrailData: OpponentTrailData = { trailPoint };
+				dispatch(setOpponentTrailData(opTrailData));
+				dispatch(setRaceState(RaceState.end));
+				dispatch(setRaceEndState(RaceEndState.lost));
+			}
+		});
+
 		socket.on("draw", (playerIdMoved, trailPoint) => {
 			if (playerIdMoved !== myPlayerId) {
 				console.log("DRAW");
@@ -147,14 +173,21 @@ const SocketClient = () => {
 		});
 
 		socket.on("leftAlone", () => {
-			dispatch(resetInitialState());
+			console.log("leftalone");
+			socket.close();
+			dispatch(setRoomName(null));
+			dispatch(setOpponentId(null));
 			dispatch(changeGameState(GameState.start));
+			dispatch(resetInitialState());
+			dispatch(setRaceState(RaceState.start));
+			dispatch(setRaceEndState(RaceEndState.racing));
 			navigate("/draw");
 			dispatch(setAlertMsg("Your opponent left the race."));
+			socket.open();
 		});
 
 		socket.on("error", (playerId) => {
-			console.log(opponentId, playerId);
+			console.log("error: ", opponentId, playerId);
 			if (opponentId === playerId) {
 				dispatch(resetInitialState());
 				dispatch(changeGameState(GameState.start));
@@ -172,20 +205,11 @@ const SocketClient = () => {
 			socket.off("lastChance");
 			socket.off("won");
 			socket.off("draw");
+			socket.off("lost");
 		};
-	});
-
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	const handleUnload = () => {
-		alert("WIAA");
-		socket.emit("playerWillUnregister");
-	};
-
-	useEffect(() => {
-		window.addEventListener("beforeunload", handleUnload);
-		return () => window.removeEventListener("beforeunload", handleUnload);
 	});
 
 	return <></>;
 };
+
 export default SocketClient;
