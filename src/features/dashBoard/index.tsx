@@ -106,7 +106,7 @@ const DashBoard = () => {
 	};
 
 	return (
-		<StyledDashBoard cursorSize={brushSize}>
+		<StyledDashBoard>
 			{gameState === GameState.start ||
 				(gameState === GameState.draw && (
 					<>

@@ -36,7 +36,7 @@ export const initialMyTrailData: MyTrailData = {
 };
 
 const initialrackData: TrackData = {
-	raceLaps: 1,
+	raceLaps: 2,
 	dimensions: { w: 100, h: 100 },
 	startLane: {
 		arrowPoints: null,
