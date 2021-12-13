@@ -19,7 +19,7 @@ const Slider = (props: sliderProps) => {
 	};
 
 	return (
-		<StyledSlider size={props.brushSize}>
+		<StyledSlider size={props.brushSize / 2}>
 			<input
 				ref={rangeRef}
 				type="range"

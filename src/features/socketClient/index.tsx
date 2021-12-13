@@ -15,6 +15,7 @@ import {
 	setOpponentId,
 } from "./socketClientSlice";
 import {
+	resetForNewRound,
 	resetInitialState,
 	selectMyTrailData,
 	selectPlayerType,
@@ -29,7 +30,7 @@ import { GameState, RaceEndState, RaceState } from "../constants";
 import { useNavigate } from "react-router-dom";
 import { ClientToServerEvents, ServerToClientEvents } from "./types";
 import { OpponentTrailData, PlayerType } from "../types";
-const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io();
+export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io();
 const SocketClient = () => {
 	const dispatch = useAppDispatch();
 	const myTrailPoint = useAppSelector(selectMyTrailData).trailPoints;
@@ -123,6 +124,18 @@ const SocketClient = () => {
 			}
 		});
 
+		//socket On
+		socket.on("newRound", (playerId) => {
+			if (myPlayerId !== playerId) {
+				dispatch(changeGameState(GameState.raceStart));
+				dispatch(resetForNewRound());
+				dispatch(setPlayerType(PlayerType.starter));
+				dispatch(setRaceEndState(RaceEndState.racing));
+				dispatch(setRaceState(RaceState.moving));
+				dispatch(setAlertMsg("Your opponent asked for a new round. Let'go!"));
+			}
+		});
+
 		socket.on("setPlayer1", (rName, playerId) => {
 			dispatch(setRoomName(rName));
 			dispatch(setMyPlayerId(playerId));
@@ -197,6 +210,7 @@ const SocketClient = () => {
 		});
 
 		return () => {
+			socket.off("newRound");
 			socket.off("error");
 			socket.off("leftAlone");
 			socket.off("update");

@@ -90,6 +90,11 @@ io.on("connection", (socket) => {
 		io.to(socket.roomName).emit("draw", socket.id, point);
 	});
 
+	socket.on("newRound", () => {
+		console.log("newRound ", socket.id);
+		io.to(socket.roomName).emit("newRound", socket.id);
+	});
+
 	socket.on("disconnect", () => {
 		console.log("disconnect ", socket.id);
 		matches = matches.filter((match) => match.roomName !== socket.roomName);

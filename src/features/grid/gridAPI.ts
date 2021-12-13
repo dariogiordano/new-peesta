@@ -737,7 +737,10 @@ export function getNewPointFromGear(
 export function getGridValue(point: Point, grid: IGrid): GridValue {
 	if (
 		Math.round(point.y / CELL_SIZE) - 1 > 0 &&
-		Math.round(point.x / CELL_SIZE) - 1 > 0
+		Math.round(point.x / CELL_SIZE) - 1 > 0 &&
+		Math.round(point.y / CELL_SIZE) - 1 < grid.length &&
+		Math.round(point.x / CELL_SIZE) - 1 <
+			grid[Math.round(point.y / CELL_SIZE) - 1].length
 	)
 		return grid[Math.round(point.y / CELL_SIZE) - 1][
 			Math.round(point.x / CELL_SIZE) - 1

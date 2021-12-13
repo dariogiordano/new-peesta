@@ -9,6 +9,7 @@ export interface ServerToClientEvents {
 	draw: (playerMoving: string, newPointMove: PathPoint) => void;
 	leftAlone: (playerId: string) => void;
 	error: (playerId: string) => void;
+	newRound: (playerId: string) => void;
 }
 
 export interface ClientToServerEvents {
@@ -21,4 +22,5 @@ export interface ClientToServerEvents {
 	won: (point: PathPoint) => void;
 	lost: (point: PathPoint) => void;
 	draw: (point: PathPoint) => void;
+	newRound: () => void;
 }

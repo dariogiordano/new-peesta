@@ -67,7 +67,9 @@ const Grid = () => {
 	useEffect(() => {
 		if (trackData.grid.length === 0) navigate("/draw");
 		if (gameState === GameState.trainingEnd) {
-			dispatch(setAlertMsg(`hai impiegato ${myTrailData.movesNumber} mosse`));
+			dispatch(
+				setAlertMsg(`You moved ${myTrailData.movesNumber} times. Good job!`)
+			);
 		}
 	});
 
@@ -108,7 +110,7 @@ const Grid = () => {
 					dispatch(setAlertMsg(""));
 				} else
 					dispatch(
-						setAlertMsg("click a point on the track to draw the start lane.")
+						setAlertMsg("click a point on the track to add the start lane.")
 					);
 			} else if (
 				trackData.startLane &&
@@ -119,7 +121,7 @@ const Grid = () => {
 			} else {
 				dispatch(setMyIsMoving(false));
 				dispatch(
-					setAlertMsg("Please add a finish lane that would cross your track")
+					setAlertMsg("Please add a start lane that crosses your track")
 				);
 				dispatch(setStartLane(null));
 			}
@@ -160,7 +162,6 @@ const Grid = () => {
 					dispatch(setAlertMsg("Click on a point on start lane to start"));
 				}
 			} else if (trackData.startLane) {
-				dispatch(setMyMovesNumber(myTrailData.movesNumber + 1));
 				const moveDetails = getMoveDetails(
 					myTrailData.trailPoints,
 					point,
@@ -187,6 +188,7 @@ const Grid = () => {
 					) &&
 					moveDetails.finishLineInfo !== "wrong direction"
 				) {
+					dispatch(setMyMovesNumber(myTrailData.movesNumber + 1));
 					directionHistoryRef.current = moveDetails.direction;
 					//setto un variabile locale per currentlap altrimenti se la gara finisce devo aspettare la mossa successiva per accorgermene
 					let newCurrentLap = myTrailData.currentLap;
@@ -206,8 +208,8 @@ const Grid = () => {
 					dispatch(setMyTrailPoints(moveDetails.points));
 					dispatch(setMyGear(moveDetails.isCrash ? 0 : moveDetails.gear));
 
-					/*this tells system tha the move ended so the info
-					can be emitted via socket to the opponent*/
+					/*this tells system that the move ended so the info
+					can be emitted via socket to the opponent. in the meantime it sets the GameState, RaceState and RaceEndState*/
 
 					if (newCurrentLap === raceLaps + 1) {
 						if (gameState === GameState.trainingStart)

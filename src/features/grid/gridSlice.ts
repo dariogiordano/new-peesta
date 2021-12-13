@@ -36,7 +36,7 @@ export const initialMyTrailData: MyTrailData = {
 };
 
 const initialrackData: TrackData = {
-	raceLaps: 2,
+	raceLaps: 1,
 	dimensions: { w: 100, h: 100 },
 	startLane: {
 		arrowPoints: null,
@@ -65,6 +65,12 @@ export const gridSlice = createSlice({
 		resetInitialState: (state) => {
 			state.myTrailData = initialMyTrailData;
 			state.trackData = initialrackData;
+			state.alertMsg = "";
+			state.opponentTrailData = undefined;
+			state.playerType = null;
+		},
+		resetForNewRound: (state) => {
+			state.myTrailData = initialMyTrailData;
 			state.alertMsg = "";
 			state.opponentTrailData = undefined;
 			state.playerType = null;
@@ -129,6 +135,7 @@ export const {
 	setPlayerMoving,
 	setOpponentTrailData,
 	setPlayerType,
+	resetForNewRound,
 } = gridSlice.actions;
 export const selectPlayerType = (state: RootState) => state.grid.playerType;
 export const selectTrackData = (state: RootState) => state.grid.trackData;

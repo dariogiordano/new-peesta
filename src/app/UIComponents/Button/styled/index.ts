@@ -9,9 +9,10 @@ const StyledButton = styled.button`
 	border-width: 1px;
 	border-color: tomato;
 	border-radius: 10px;
-	padding: 10px;
-	font-weight: bold;
-	margin: 0 0 15px 0;
+	padding: 4px;
+	font-family: "Staatliches", cursive;
+	font-size: 1.2em;
+	margin: 0 0 10px 0;
 	justify-content: center;
 	:hover {
 		cursor: pointer;

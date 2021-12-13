@@ -4,7 +4,7 @@ interface propsSlider {
 }
 
 const StyledSlider = styled.div<propsSlider>`
-	width: 100%;
+	width: 50%;
 
 	.slider {
 		-webkit-appearance: none;
@@ -12,7 +12,7 @@ const StyledSlider = styled.div<propsSlider>`
 		height: 1px;
 		background: #d3d3d3;
 		outline: none;
-		margin: 50px 0;
+		margin: 0;
 	}
 
 	.slider::-webkit-slider-thumb {
