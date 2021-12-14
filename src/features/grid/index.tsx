@@ -68,7 +68,7 @@ const Grid = () => {
 		if (trackData.grid.length === 0) navigate("/draw");
 		if (gameState === GameState.trainingEnd) {
 			dispatch(
-				setAlertMsg(`You moved ${myTrailData.movesNumber} times. Good job!`)
+				setAlertMsg(`It took you ${myTrailData.movesNumber} moves. Good job!`)
 			);
 		}
 	});
