@@ -11,7 +11,7 @@ const Slider = (props: sliderProps) => {
 	const rangeRef = React.useRef<HTMLInputElement>(null);
 	const handleChange = () => {
 		if (rangeRef.current) {
-			props.onChange(rangeRef.current.value);
+			props.onChange(parseInt(rangeRef.current.value));
 		}
 	};
 

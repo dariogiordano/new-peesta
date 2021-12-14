@@ -4,7 +4,8 @@ interface propsSlider {
 }
 
 const StyledSlider = styled.div<propsSlider>`
-	width: 50%;
+	width: 100%;
+	min-height: 30px;
 
 	.slider {
 		-webkit-appearance: none;

@@ -17,7 +17,7 @@ const CopyToClipboard = (props: IProps) => {
 	return (
 		<Button
 			onButtonClick={() => handleChange()}
-			text={copied ? "COPIED" : "CLICK TO COPY URL"}
+			text={copied ? "COPIED! SEND IT TO YOUR OPPONENT" : "CLICK TO COPY LINK"}
 		/>
 	);
 };

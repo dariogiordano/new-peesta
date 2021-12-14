@@ -19,7 +19,7 @@ const StyledButton = styled.div`
 	}
 	&:hover {
 		cursor: pointer;
-		border: 3px solid aqua;
+		border: 3px solid tomato;
 	}
 `;
 
