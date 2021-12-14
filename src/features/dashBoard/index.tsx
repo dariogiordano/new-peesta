@@ -14,6 +14,7 @@ import StyledDashBoard from "./styled";
 import { changeGameState } from "./dashBoardSlice";
 import {
 	BG_COLOR,
+	CELL_SIZE,
 	GameState,
 	RaceEndState,
 	RaceState,
@@ -32,6 +33,7 @@ import {
 	selectStartLane,
 	setPlayerType,
 	resetForNewRound,
+	setRaceLaps,
 } from "../grid/gridSlice";
 import { useNavigate } from "react-router";
 
@@ -187,8 +189,14 @@ const DashBoard = () => {
 						</div>
 						<h6>Brush Size</h6>
 						<Slider
-							brushSize={brushSize}
-							onChange={(e: number) => dispatch(changeSize(e))}
+							min={CELL_SIZE * 2}
+							max={CELL_SIZE * 4}
+							cursorSize={brushSize}
+							default={brushSize}
+							onChange={(e: number) => {
+								if (Math.round(e) % Math.round(CELL_SIZE / 2) === 0)
+									dispatch(changeSize(e));
+							}}
 						></Slider>
 					</>
 				))}
@@ -202,6 +210,18 @@ const DashBoard = () => {
 						text="START THE RACE!"
 						onButtonClick={() => startRace()}
 					></Button>
+					<h6>
+						Set number of laps.
+						<br />
+						Now it is <strong>{raceLaps}</strong>
+					</h6>
+					<Slider
+						min={1}
+						max={5}
+						cursorSize={CELL_SIZE * 2}
+						default={raceLaps}
+						onChange={(e: number) => dispatch(setRaceLaps(e))}
+					></Slider>
 				</>
 			)}
 

@@ -82,6 +82,9 @@ export const gridSlice = createSlice({
 		setPlayerMoving: (state, action: PayloadAction<string>) => {
 			state.playerMoving = action.payload;
 		},
+		setRaceLaps: (state, action: PayloadAction<number>) => {
+			state.trackData.raceLaps = action.payload;
+		},
 		setTrackData: (state, action: PayloadAction<TrackData>) => {
 			state.trackData = action.payload;
 		},
@@ -136,6 +139,7 @@ export const {
 	setOpponentTrailData,
 	setPlayerType,
 	resetForNewRound,
+	setRaceLaps,
 } = gridSlice.actions;
 export const selectPlayerType = (state: RootState) => state.grid.playerType;
 export const selectTrackData = (state: RootState) => state.grid.trackData;

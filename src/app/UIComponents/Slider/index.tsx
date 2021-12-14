@@ -1,31 +1,28 @@
 import React from "react";
-import { CELL_SIZE } from "../../../features/constants";
 import StyledSlider from "./styled";
 interface sliderProps {
-	brushSize: number;
+	cursorSize: number;
 	onChange: Function;
+	min: number;
+	max: number;
+	default: number;
 }
 const Slider = (props: sliderProps) => {
 	const rangeRef = React.useRef<HTMLInputElement>(null);
 	const handleChange = () => {
-		if (
-			rangeRef.current &&
-			Math.round(parseInt(rangeRef.current.value)) %
-				Math.round(CELL_SIZE / 2) ===
-				0
-		) {
+		if (rangeRef.current) {
 			props.onChange(rangeRef.current.value);
 		}
 	};
 
 	return (
-		<StyledSlider size={props.brushSize / 2}>
+		<StyledSlider size={props.cursorSize / 2}>
 			<input
 				ref={rangeRef}
 				type="range"
-				min={CELL_SIZE * 2}
-				max={CELL_SIZE * 4}
-				defaultValue={props.brushSize}
+				min={props.min}
+				max={props.max}
+				defaultValue={props.default}
 				onInput={() => handleChange()}
 				className="slider"
 			></input>
