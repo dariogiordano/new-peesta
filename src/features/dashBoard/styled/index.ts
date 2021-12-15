@@ -80,6 +80,7 @@ const StyledDashBoard = styled.div`
 			margin-bottom: 10px;
 			padding-bottom: 5px;
 			border-bottom: 1px solid #d3d3d3;
+			word-break: break-all;
 		}
 	}
 `;

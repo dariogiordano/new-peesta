@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
 	removeExternalDataUrl,
 	selectColor,
+	selectDataUrl,
 	selectExternalDataUrl,
 	selectSize,
 	setDataUrl,
@@ -24,7 +25,7 @@ const DrawBoard = () => {
 	let last_mouse = useRef<Point>({ x: 0, y: 0 });
 	let down = useRef<Boolean>(false);
 	const navigate = useNavigate();
-
+	const dataUrl = useAppSelector(selectDataUrl);
 	const raceLaps = useAppSelector(selectRaceLaps);
 	const brushColor = useAppSelector(selectColor);
 	const brushSize = useAppSelector(selectSize);
@@ -35,20 +36,33 @@ const DrawBoard = () => {
 		if (canvas) {
 			const ctx = canvas.getContext("2d");
 			if (ctx) {
-				if (externalDataURL) {
-					var img = new Image();
+				if (gameState === GameState.start) {
+					ctx.fillStyle = BG_COLOR;
+					ctx.fillRect(0, 0, canvas.width, canvas.height);
+					dispatch(setDataUrl(null));
+					addBorder(ctx, canvas.width, canvas.height);
+					dispatch(changeGameState(GameState.draw));
+				} else if (dataUrl) {
+					let img = new Image();
+					img.src = dataUrl;
+					setTimeout(() => {
+						ctx.drawImage(img, 0, 0);
+						if (canvas) addBorder(ctx, canvas.width, canvas.height);
+						ctx.lineWidth = brushSize;
+						ctx.lineJoin = "round";
+						ctx.lineCap = "round";
+						ctx.strokeStyle = brushColor;
+					});
+				} else if (externalDataURL) {
+					let img = new Image();
 					img.src = externalDataURL;
 					setTimeout(() => {
 						ctx.drawImage(img, 0, 0);
 						if (canvas) addBorder(ctx, canvas.width, canvas.height);
 						dispatch(removeExternalDataUrl());
 					});
-				} else if (gameState === GameState.start) {
-					ctx.fillStyle = BG_COLOR;
-					ctx.fillRect(0, 0, canvas.width, canvas.height);
-					addBorder(ctx, canvas.width, canvas.height);
-					dispatch(changeGameState(GameState.draw));
 				}
+
 				ctx.lineWidth = brushSize;
 				ctx.lineJoin = "round";
 				ctx.lineCap = "round";
@@ -180,7 +194,10 @@ const DrawBoard = () => {
 		last_mouse.current.x = mouse.current.x;
 		last_mouse.current.y = mouse.current.y;
 		down.current = false;
+		updateDataUrl();
+	};
 
+	const updateDataUrl = () => {
 		let canvas = canvasRef.current as HTMLCanvasElement;
 		let canvasToDownload = document.createElement(
 			"CANVAS"
@@ -196,6 +213,7 @@ const DrawBoard = () => {
 			dispatch(setDataUrl(canvasToDownload.toDataURL()));
 		});
 	};
+
 	const handleMouseMove = (
 		e: React.MouseEvent<HTMLCanvasElement, MouseEvent>
 	) => {

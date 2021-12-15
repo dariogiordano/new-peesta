@@ -10,14 +10,14 @@ export type BrushColor = typeof TRACK_COLOR | typeof BG_COLOR;
 export interface DrawBoardState {
 	brushColor: BrushColor;
 	brushSize: number;
-	dataUrl: string;
+	dataUrl: string | null;
 	externalDataUrl?: string;
 }
 
 const initialState: DrawBoardState = {
 	brushColor: TRACK_COLOR,
 	brushSize: CELL_SIZE * 3,
-	dataUrl: "",
+	dataUrl: null,
 };
 
 export const drawBoardSlice = createSlice({
@@ -30,7 +30,7 @@ export const drawBoardSlice = createSlice({
 		changeSize: (state, action: PayloadAction<number>) => {
 			state.brushSize = action.payload;
 		},
-		setDataUrl: (state, action: PayloadAction<string>) => {
+		setDataUrl: (state, action: PayloadAction<string | null>) => {
 			state.dataUrl = action.payload;
 		},
 		setExternalDataUrl: (state, action: PayloadAction<string>) => {

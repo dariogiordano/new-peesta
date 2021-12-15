@@ -34,6 +34,7 @@ import {
 	setPlayerType,
 	resetForNewRound,
 	setRaceLaps,
+	resetInitialStateKeepingTrack,
 } from "../grid/gridSlice";
 import { useNavigate } from "react-router";
 
@@ -110,8 +111,8 @@ const DashBoard = () => {
 	};
 
 	const backToDraw = () => {
-		dispatch(resetInitialState());
-		dispatch(changeGameState(GameState.start));
+		dispatch(resetInitialStateKeepingTrack());
+		dispatch(changeGameState(GameState.draw));
 		navigate("/draw");
 	};
 	const startAgain = () => {
@@ -132,7 +133,7 @@ const DashBoard = () => {
 	const saveTrack = () => {
 		var link: HTMLAnchorElement = document.createElement("a");
 		link.download = "track.png";
-		link.href = dataUrl;
+		link.href = dataUrl || "";
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
@@ -215,10 +216,11 @@ const DashBoard = () => {
 				))}
 			{gameState === GameState.drawFinishLine && (
 				<>
-					{" "}
 					<div className="flex-box">
-						<p>
-							Set number of laps. Now it's <strong>{raceLaps}</strong>
+						<div>
+							<p>
+								Set number of laps. Now it's <strong>{raceLaps}</strong>
+							</p>
 							<Slider
 								min={1}
 								max={5}
@@ -226,7 +228,14 @@ const DashBoard = () => {
 								default={raceLaps}
 								onChange={(e: number) => dispatch(setRaceLaps(e))}
 							></Slider>
-						</p>
+						</div>
+					</div>
+					<div className="flex-box">
+						<IconButton
+							text="edit"
+							tooltip="Back to drawing"
+							onButtonClick={() => backToDraw()}
+						></IconButton>
 					</div>
 					<p className="next-steps">Next steps</p>
 					<Button
@@ -329,7 +338,7 @@ const DashBoard = () => {
 						></IconButton>
 						<IconButton
 							text="edit"
-							tooltip="Draw another track"
+							tooltip="Back to drawing"
 							onButtonClick={() => backToDraw()}
 						></IconButton>
 					</div>

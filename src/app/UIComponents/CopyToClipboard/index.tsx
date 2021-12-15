@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 import Button from "../../UIComponents/Button";
+import StyledCopyToClipboard from "./styled";
 interface IProps {
 	textToCopy: string;
 }
@@ -15,10 +16,13 @@ const CopyToClipboard = (props: IProps) => {
 	};
 
 	return (
-		<Button
-			onButtonClick={() => handleChange()}
-			text={copied ? "COPIED! SEND IT TO YOUR OPPONENT" : "CLICK TO COPY LINK"}
-		/>
+		<StyledCopyToClipboard>
+			<Button
+				onButtonClick={() => handleChange()}
+				text={copied ? "COPIED!*" : "CLICK TO COPY LINK"}
+			/>
+			{copied && <span>* You can send it to yout opponent now.</span>}
+		</StyledCopyToClipboard>
 	);
 };
 export default CopyToClipboard;

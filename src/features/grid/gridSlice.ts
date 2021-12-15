@@ -35,7 +35,7 @@ export const initialMyTrailData: MyTrailData = {
 	startLanePosition: null,
 };
 
-const initialrackData: TrackData = {
+const initialTrackData: TrackData = {
 	raceLaps: 1,
 	dimensions: { w: 100, h: 100 },
 	startLane: {
@@ -53,7 +53,7 @@ const initialrackData: TrackData = {
 const initialState: matchState = {
 	playerType: null,
 	playerMoving: null,
-	trackData: initialrackData,
+	trackData: initialTrackData,
 	myTrailData: initialMyTrailData,
 	alertMsg: "",
 };
@@ -64,7 +64,18 @@ export const gridSlice = createSlice({
 	reducers: {
 		resetInitialState: (state) => {
 			state.myTrailData = initialMyTrailData;
-			state.trackData = initialrackData;
+			state.trackData = initialTrackData;
+			state.alertMsg = "";
+			state.opponentTrailData = undefined;
+			state.playerType = null;
+		},
+		resetInitialStateKeepingTrack: (state) => {
+			state.myTrailData = initialMyTrailData;
+			state.trackData = {
+				...initialTrackData,
+				imgData: state.trackData.imgData,
+			};
+
 			state.alertMsg = "";
 			state.opponentTrailData = undefined;
 			state.playerType = null;
@@ -140,6 +151,7 @@ export const {
 	setPlayerType,
 	resetForNewRound,
 	setRaceLaps,
+	resetInitialStateKeepingTrack,
 } = gridSlice.actions;
 export const selectPlayerType = (state: RootState) => state.grid.playerType;
 export const selectTrackData = (state: RootState) => state.grid.trackData;
