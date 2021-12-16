@@ -148,110 +148,54 @@ const DashBoard = () => {
 			<p className="subtitle">
 				Draw a track, send it to your opponent and start racing!
 			</p>
-			{gameState === GameState.start ||
-				(gameState === GameState.draw && (
+
+			<div className="flex-box tools">
+				{(gameState === GameState.start || gameState === GameState.draw) && (
 					<>
-						<div className="flex-box">
-							<div className="brush-color">
-								<p>Brush Color</p>
-								<ColorButton
-									onButtonClick={() => dispatch(changeColor(TRACK_COLOR))}
-									brushColor={brushColor}
-									color={TRACK_COLOR}
-								/>
-								<ColorButton
-									onButtonClick={() => dispatch(changeColor(BG_COLOR))}
-									brushColor={brushColor}
-									color={BG_COLOR}
-								/>
-							</div>
-							<div className="brush-size">
-								<p>Brush Size</p>
-								<Slider
-									min={CELL_SIZE * 2}
-									max={CELL_SIZE * 4}
-									cursorSize={brushSize}
-									default={brushSize}
-									onChange={(e: number) => {
-										if (Math.round(e) % Math.round(CELL_SIZE / 2) === 0)
-											dispatch(changeSize(e));
-									}}
-								></Slider>
-							</div>
-						</div>
-						<div className="flex-box">
-							<IconButton
-								tooltip="Reset drawing"
-								text="refresh"
-								onButtonClick={() => dispatch(changeGameState(GameState.start))}
-							></IconButton>
-							<IconButton
-								tooltip="Save this track"
-								text="file_download"
-								onButtonClick={() => saveTrack()}
-							></IconButton>
-							<IconButton
-								tooltip="Upload a saved track"
-								text="file_upload"
-								onButtonClick={() => loadTrack()}
-							></IconButton>
-							<input
-								ref={fileRef}
-								className="invisible-input"
-								type="file"
-								title="select"
-								onClick={(e: any) => (e.target.value = null)}
-								onChange={(e: any) => handleFileChange(e.target.files[0])}
+						<div className="brush-color">
+							<p>Brush Color</p>
+							<ColorButton
+								onButtonClick={() => dispatch(changeColor(TRACK_COLOR))}
+								brushColor={brushColor}
+								color={TRACK_COLOR}
+							/>
+							<ColorButton
+								onButtonClick={() => dispatch(changeColor(BG_COLOR))}
+								brushColor={brushColor}
+								color={BG_COLOR}
 							/>
 						</div>
-
-						<p className="next-steps">Next steps</p>
-						<Button
-							text="DRAW START LANE"
-							onButtonClick={() =>
-								dispatch(changeGameState(GameState.drawFinishLine))
-							}
-						></Button>
-					</>
-				))}
-			{gameState === GameState.drawFinishLine && (
-				<>
-					<div className="flex-box">
-						<div>
-							<p>
-								Set number of laps. Now it's <strong>{raceLaps}</strong>
-							</p>
+						<div className="brush-size">
+							<p>Brush Size</p>
 							<Slider
-								min={1}
-								max={5}
-								cursorSize={CELL_SIZE * 2}
-								default={raceLaps}
-								onChange={(e: number) => dispatch(setRaceLaps(e))}
+								min={CELL_SIZE * 2}
+								max={CELL_SIZE * 4}
+								cursorSize={brushSize}
+								default={brushSize}
+								onChange={(e: number) => {
+									if (Math.round(e) % Math.round(CELL_SIZE / 2) === 0)
+										dispatch(changeSize(e));
+								}}
 							></Slider>
 						</div>
+					</>
+				)}
+				{gameState === GameState.drawFinishLine && (
+					<div>
+						<p>
+							Set number of laps. Now it's <strong>{raceLaps}</strong>
+						</p>
+						<Slider
+							min={1}
+							max={5}
+							cursorSize={CELL_SIZE * 2}
+							default={raceLaps}
+							onChange={(e: number) => dispatch(setRaceLaps(e))}
+						></Slider>
 					</div>
-					<div className="flex-box">
-						<IconButton
-							text="edit"
-							tooltip="Back to drawing"
-							onButtonClick={() => backToDraw()}
-						></IconButton>
-					</div>
-					<p className="next-steps">Next steps</p>
-					<Button
-						text="DO SOME TRAINING"
-						onButtonClick={() => startTraining()}
-					></Button>
-					<Button
-						text="START THE RACE!"
-						onButtonClick={() => startRace()}
-					></Button>
-				</>
-			)}
-
-			{(gameState === GameState.raceStart ||
-				gameState === GameState.trainingStart) && (
-				<div className="flex-box">
+				)}
+				{(gameState === GameState.raceStart ||
+					gameState === GameState.trainingStart) && (
 					<p className="no-select">
 						LAP:{myTrailData.currentLap}/{raceLaps}
 						<br />
@@ -259,97 +203,152 @@ const DashBoard = () => {
 						<br />
 						MOVES:{myTrailData.movesNumber}
 					</p>
-				</div>
-			)}
-			{gameState === GameState.trainingEnd && (
-				<div className="flex-box">
+				)}
+				{(gameState === GameState.trainingEnd ||
+					gameState === GameState.raceEnd ||
+					raceEndState === RaceEndState.waitingOpponentFinish) && (
 					<p className="no-select">
-						LAP: -
+						LAP:{raceLaps}/{raceLaps}
 						<br />
-						GEAR: -
+						GEAR:{myTrailData.gear}
 						<br />
-						MOVES: -
+						MOVES:{myTrailData.movesNumber}
 					</p>
-				</div>
-			)}
-
-			{gameState === GameState.raceStart && (
-				<>
-					{raceState === RaceState.waitingOpponentStart && (
-						<>
-							<p className="race-url">
-								{`${window.location.protocol}//${window.location.host}/${roomName}/${myId}`}
-							</p>
-							<p className="next-steps">Next steps</p>
-							<CopyToClipboard
-								textToCopy={`${window.location.protocol}//${window.location.host}/${roomName}/${myId}`}
-							/>
-						</>
-					)}
-
-					{raceState === RaceState.moving && (
+				)}
+			</div>
+			{
+				//end tools
+			}
+			<div className="flex-box actions">
+				{(gameState === GameState.start || gameState === GameState.draw) && (
+					<>
+						<IconButton
+							tooltip="Reset drawing"
+							text="refresh"
+							onButtonClick={() => dispatch(changeGameState(GameState.start))}
+						></IconButton>
+						<IconButton
+							tooltip="Save this track"
+							text="file_download"
+							onButtonClick={() => saveTrack()}
+						></IconButton>
+						<IconButton
+							tooltip="Upload a saved track"
+							text="file_upload"
+							onButtonClick={() => loadTrack()}
+						></IconButton>
+						<input
+							ref={fileRef}
+							className="invisible-input"
+							type="file"
+							title="select"
+							onClick={(e: any) => (e.target.value = null)}
+							onChange={(e: any) => handleFileChange(e.target.files[0])}
+						/>
+					</>
+				)}
+				{gameState === GameState.drawFinishLine && (
+					<IconButton
+						text="edit"
+						tooltip="Back to drawing"
+						onButtonClick={() => backToDraw()}
+					></IconButton>
+				)}
+				{gameState === GameState.raceStart &&
+					raceState === RaceState.moving && (
 						<h5 className="no-select"> Make your move!</h5>
 					)}
-					{raceState === RaceState.waitingOpponentMove && (
+				{gameState === GameState.raceStart &&
+					raceState === RaceState.waitingOpponentMove && (
 						<h5 className="no-select"> Wait for your opponent's move...</h5>
 					)}
-					{raceState === RaceState.lastChanceToDraw && (
+				{gameState === GameState.raceStart &&
+					raceState === RaceState.lastChanceToDraw && (
 						<h5 className="no-select">Your last chance to draw...</h5>
 					)}
-				</>
-			)}
-			{gameState === GameState.raceEnd && (
-				<>
-					{raceEndState === RaceEndState.waitingOpponentFinish && (
-						<>
-							<h5>Good job!</h5>
-							<p> Wait for your opponent's last chance to draw...</p>
-						</>
-					)}
-					{raceEndState === RaceEndState.won && <h5> YOU WON!</h5>}
-					{raceEndState === RaceEndState.lost && <h5> YOU LOST!</h5>}
-					{raceEndState === RaceEndState.draw && <h5> IT'S A DRAW!</h5>}
-					{(raceEndState === RaceEndState.won ||
-						raceEndState === RaceEndState.lost ||
-						raceEndState === RaceEndState.draw) && (
-						<>
-							<p className="next-steps">Next steps</p>
-							<Button
-								text="ASK FOR A NEW ROUND"
-								onButtonClick={() => otherRound()}
-							></Button>
-							<Button
-								text="LEAVE THIS RACE"
-								onButtonClick={() => backToDrawFromRacing()}
-							></Button>
-						</>
-					)}
-				</>
-			)}
-
-			{(gameState === GameState.trainingEnd ||
-				gameState === GameState.trainingStart) && (
-				<>
-					<div className="flex-box">
+				{(gameState === GameState.trainingEnd ||
+					gameState === GameState.trainingStart) && (
+					<>
 						<IconButton
 							text="refresh"
 							tooltip="Restart Training"
 							onButtonClick={() => startAgain()}
-						></IconButton>
+						/>
 						<IconButton
 							text="edit"
 							tooltip="Back to drawing"
 							onButtonClick={() => backToDraw()}
-						></IconButton>
-					</div>
+						/>
+					</>
+				)}
+				{gameState === GameState.raceStart &&
+					raceState === RaceState.waitingOpponentStart && (
+						<p className="race-url">
+							{`${window.location.protocol}//${window.location.host}/${roomName}/${myId}`}
+						</p>
+					)}
 
+				{gameState === GameState.raceEnd &&
+					raceEndState === RaceEndState.waitingOpponentFinish && (
+						<div>
+							<h5>Good job!</h5>
+							<p> Wait for your opponent's last chance to draw...</p>
+						</div>
+					)}
+				{gameState === GameState.raceEnd &&
+					raceEndState === RaceEndState.won && <h5> YOU WON!</h5>}
+				{gameState === GameState.raceEnd &&
+					raceEndState === RaceEndState.lost && <h5> YOU LOST!</h5>}
+				{gameState === GameState.raceEnd &&
+					raceEndState === RaceEndState.draw && <h5> IT'S A DRAW!</h5>}
+			</div>
+			{
+				//end actions
+			}
+			{gameState !== GameState.raceStart &&
+				gameState !== GameState.trainingStart && (
 					<p className="next-steps">Next steps</p>
+				)}
+			{(gameState === GameState.start || gameState === GameState.draw) && (
+				<Button
+					text="DRAW START LANE"
+					onButtonClick={() =>
+						dispatch(changeGameState(GameState.drawFinishLine))
+					}
+				/>
+			)}
+			{gameState === GameState.drawFinishLine && (
+				<Button text="DO SOME TRAINING" onButtonClick={() => startTraining()} />
+			)}
+
+			{(raceEndState === RaceEndState.won ||
+				raceEndState === RaceEndState.lost ||
+				raceEndState === RaceEndState.draw) && (
+				<>
 					<Button
-						text="START THE RACE!"
-						onButtonClick={() => startRace()}
-					></Button>
+						text="ASK FOR A NEW ROUND"
+						onButtonClick={() => otherRound()}
+					/>
+					<Button
+						text="LEAVE THIS RACE"
+						onButtonClick={() => backToDrawFromRacing()}
+					/>
 				</>
 			)}
+			{(gameState === GameState.trainingEnd ||
+				gameState === GameState.drawFinishLine) && (
+				<Button text="START THE RACE!" onButtonClick={() => startRace()} />
+			)}
+
+			{gameState === GameState.raceStart &&
+				raceState === RaceState.waitingOpponentStart && (
+					<CopyToClipboard
+						textToCopy={`${window.location.protocol}//${window.location.host}/${roomName}/${myId}`}
+					/>
+				)}
+			{
+				// END NEXT STEPS
+			}
 
 			<h3 className={alertMsg ? "alert-box" : ""}>{alertMsg}</h3>
 		</StyledDashBoard>

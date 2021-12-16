@@ -42,6 +42,19 @@ const DrawBoard = () => {
 					dispatch(setDataUrl(null));
 					addBorder(ctx, canvas.width, canvas.height);
 					dispatch(changeGameState(GameState.draw));
+				} else if (externalDataURL) {
+					dispatch(setDataUrl(null));
+					let img = new Image();
+					img.src = externalDataURL;
+					setTimeout(() => {
+						ctx.drawImage(img, 0, 0);
+						if (canvas) addBorder(ctx, canvas.width, canvas.height);
+						dispatch(removeExternalDataUrl());
+						ctx.lineWidth = brushSize;
+						ctx.lineJoin = "round";
+						ctx.lineCap = "round";
+						ctx.strokeStyle = brushColor;
+					});
 				} else if (dataUrl) {
 					let img = new Image();
 					img.src = dataUrl;
@@ -52,14 +65,6 @@ const DrawBoard = () => {
 						ctx.lineJoin = "round";
 						ctx.lineCap = "round";
 						ctx.strokeStyle = brushColor;
-					});
-				} else if (externalDataURL) {
-					let img = new Image();
-					img.src = externalDataURL;
-					setTimeout(() => {
-						ctx.drawImage(img, 0, 0);
-						if (canvas) addBorder(ctx, canvas.width, canvas.height);
-						dispatch(removeExternalDataUrl());
 					});
 				}
 
