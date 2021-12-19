@@ -68,8 +68,6 @@ const Grid = () => {
 	const directionHistoryRef = useRef<Direction>("");
 	useEffect(() => {
 		if (trackData.grid.length === 0) navigate("/draw");
-		if (gameState === GameState.trainingEnd) {
-		}
 	});
 
 	const isRacing = (): boolean => {

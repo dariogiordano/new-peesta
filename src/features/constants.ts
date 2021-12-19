@@ -16,7 +16,6 @@ export enum GameState {
 	raceStart = "raceStart",
 	trainingStart = "trainingStart",
 	raceEnd = "raceEnd",
-	trainingEnd = "trainingEnd",
 }
 
 export enum RaceState {
