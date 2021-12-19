@@ -22,10 +22,11 @@ const StyledDashBoard = styled.div`
 		div {
 			margin-right: 5px;
 			&.brush-color {
-				width: 35%;
+				width: 25%;
+				min-width: 90px;
 			}
 			&.brush-size {
-				width: calc(65% - 10px);
+				width: calc(75% - 10px);
 				margin-left: 10px;
 			}
 		}

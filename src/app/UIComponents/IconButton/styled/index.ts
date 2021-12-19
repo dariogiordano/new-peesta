@@ -1,14 +1,17 @@
 import styled from "styled-components";
 import { TRACK_COLOR } from "../../../../features/constants";
+interface propsIconButton {
+	color?: string;
+}
 
-const StyledIconButton = styled.button`
+const StyledIconButton = styled.button<propsIconButton>`
 	display: flex;
-	background-color: tomato;
+	background-color: ${(props) => props.color || "tomato"};
 	color: white;
 	text-align: center;
 	border-style: solid;
 	border-width: 1px;
-	border-color: tomato;
+	border-color: ${(props) => props.color || "tomato"};
 	border-radius: 50%;
 	padding: 4px;
 	font-family: "Staatliches", cursive;
@@ -18,7 +21,7 @@ const StyledIconButton = styled.button`
 	:hover {
 		cursor: pointer;
 		background-color: white;
-		color: tomato;
+		color: ${(props) => props.color || "tomato"};
 		.tooltip {
 			top: 36px;
 			opacity: 1;

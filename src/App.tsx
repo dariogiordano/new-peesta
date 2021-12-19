@@ -1,6 +1,4 @@
 import React from "react";
-
-import "./App.css";
 import { Navigate, Route, Routes } from "react-router-dom";
 import DrawBoard from "./features/drawBoard";
 import DashBoard from "./features/dashBoard";

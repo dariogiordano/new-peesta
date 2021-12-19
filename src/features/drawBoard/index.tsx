@@ -50,6 +50,7 @@ const DrawBoard = () => {
 						ctx.drawImage(img, 0, 0);
 						if (canvas) addBorder(ctx, canvas.width, canvas.height);
 						dispatch(removeExternalDataUrl());
+						dispatch(setDataUrl(externalDataURL));
 						ctx.lineWidth = brushSize;
 						ctx.lineJoin = "round";
 						ctx.lineCap = "round";
@@ -72,7 +73,7 @@ const DrawBoard = () => {
 				ctx.lineJoin = "round";
 				ctx.lineCap = "round";
 				ctx.strokeStyle = brushColor;
-				if (gameState === GameState.drawFinishLine) {
+				if (gameState === GameState.drawStartLane) {
 					deleteBorder(ctx, width, height);
 					let gridPromise = getGrid(
 						canvas,

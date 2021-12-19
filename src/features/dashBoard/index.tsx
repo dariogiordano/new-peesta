@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import Button from "../../app/UIComponents/Button";
 import {
@@ -52,6 +52,7 @@ import {
 import { socket } from "../socketClient";
 import { PlayerType } from "../types";
 import IconButton from "../../app/UIComponents/IconButton";
+import ReactModal from "react-modal";
 
 const DashBoard = () => {
 	const dispatch = useAppDispatch();
@@ -69,6 +70,7 @@ const DashBoard = () => {
 	const raceEndState = useAppSelector(selectRaceEndState);
 	const startLane = useAppSelector(selectStartLane);
 	const fileRef = useRef<HTMLInputElement>(null);
+	const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
 
 	const otherRound = () => {
 		dispatch(setRaceState(RaceState.waitingOpponentMove));
@@ -115,6 +117,11 @@ const DashBoard = () => {
 		dispatch(changeGameState(GameState.draw));
 		navigate("/draw");
 	};
+
+	const backToStartLine = () => {
+		dispatch(changeGameState(GameState.drawStartLane));
+		dispatch(setMyTrailData(initialMyTrailData));
+	};
 	const startAgain = () => {
 		dispatch(changeGameState(GameState.trainingStart));
 		dispatch(setMyTrailData(initialMyTrailData));
@@ -142,6 +149,8 @@ const DashBoard = () => {
 		if (fileRef.current) fileRef.current.click();
 	};
 
+	ReactModal.setAppElement("#root");
+
 	return (
 		<StyledDashBoard>
 			<h1>PEESTAAH!</h1>
@@ -155,11 +164,13 @@ const DashBoard = () => {
 						<div className="brush-color">
 							<p>Brush Color</p>
 							<ColorButton
+								icon="add"
 								onButtonClick={() => dispatch(changeColor(TRACK_COLOR))}
 								brushColor={brushColor}
 								color={TRACK_COLOR}
 							/>
 							<ColorButton
+								icon="remove"
 								onButtonClick={() => dispatch(changeColor(BG_COLOR))}
 								brushColor={brushColor}
 								color={BG_COLOR}
@@ -180,7 +191,7 @@ const DashBoard = () => {
 						</div>
 					</>
 				)}
-				{gameState === GameState.drawFinishLine && (
+				{gameState === GameState.drawStartLane && (
 					<div>
 						<p>
 							Set number of laps. Now it's <strong>{raceLaps}</strong>
@@ -204,8 +215,7 @@ const DashBoard = () => {
 						MOVES:{myTrailData.movesNumber}
 					</p>
 				)}
-				{(gameState === GameState.trainingEnd ||
-					gameState === GameState.raceEnd ||
+				{(gameState === GameState.raceEnd ||
 					raceEndState === RaceEndState.waitingOpponentFinish) && (
 					<p className="no-select">
 						LAP:{raceLaps}/{raceLaps}
@@ -220,6 +230,21 @@ const DashBoard = () => {
 				//end tools
 			}
 			<div className="flex-box actions">
+				{(gameState === GameState.start ||
+					gameState === GameState.draw ||
+					gameState === GameState.drawStartLane ||
+					gameState === GameState.trainingStart) && (
+					<>
+						<IconButton
+							tooltip="Help"
+							text="question_mark"
+							onButtonClick={() => {
+								setIsPopupOpen(true);
+							}}
+						></IconButton>
+					</>
+				)}
+
 				{(gameState === GameState.start || gameState === GameState.draw) && (
 					<>
 						<IconButton
@@ -247,13 +272,35 @@ const DashBoard = () => {
 						/>
 					</>
 				)}
-				{gameState === GameState.drawFinishLine && (
+				{gameState === GameState.trainingStart && (
+					<>
+						<IconButton
+							text="refresh"
+							tooltip="Restart Training"
+							onButtonClick={() => startAgain()}
+						/>
+					</>
+				)}
+				{gameState === GameState.drawStartLane && (
 					<IconButton
 						text="edit"
 						tooltip="Back to drawing"
 						onButtonClick={() => backToDraw()}
 					></IconButton>
 				)}
+				{gameState === GameState.trainingStart && (
+					<IconButton
+						text="exit_to_app"
+						tooltip="Exit training"
+						onButtonClick={() => backToStartLine()}
+					></IconButton>
+				)}
+				{gameState === GameState.raceStart &&
+					raceState === RaceState.waitingOpponentStart && (
+						<p className="race-url">
+							{`${window.location.protocol}//${window.location.host}/${roomName}/${myId}`}
+						</p>
+					)}
 				{gameState === GameState.raceStart &&
 					raceState === RaceState.moving && (
 						<h5 className="no-select"> Make your move!</h5>
@@ -265,27 +312,6 @@ const DashBoard = () => {
 				{gameState === GameState.raceStart &&
 					raceState === RaceState.lastChanceToDraw && (
 						<h5 className="no-select">Your last chance to draw...</h5>
-					)}
-				{(gameState === GameState.trainingEnd ||
-					gameState === GameState.trainingStart) && (
-					<>
-						<IconButton
-							text="refresh"
-							tooltip="Restart Training"
-							onButtonClick={() => startAgain()}
-						/>
-						<IconButton
-							text="edit"
-							tooltip="Back to drawing"
-							onButtonClick={() => backToDraw()}
-						/>
-					</>
-				)}
-				{gameState === GameState.raceStart &&
-					raceState === RaceState.waitingOpponentStart && (
-						<p className="race-url">
-							{`${window.location.protocol}//${window.location.host}/${roomName}/${myId}`}
-						</p>
 					)}
 
 				{gameState === GameState.raceEnd &&
@@ -313,11 +339,11 @@ const DashBoard = () => {
 				<Button
 					text="DRAW START LANE"
 					onButtonClick={() =>
-						dispatch(changeGameState(GameState.drawFinishLine))
+						dispatch(changeGameState(GameState.drawStartLane))
 					}
 				/>
 			)}
-			{gameState === GameState.drawFinishLine && (
+			{gameState === GameState.drawStartLane && (
 				<Button text="DO SOME TRAINING" onButtonClick={() => startTraining()} />
 			)}
 
@@ -335,8 +361,7 @@ const DashBoard = () => {
 					/>
 				</>
 			)}
-			{(gameState === GameState.trainingEnd ||
-				gameState === GameState.drawFinishLine) && (
+			{gameState === GameState.drawStartLane && (
 				<Button text="START THE RACE!" onButtonClick={() => startRace()} />
 			)}
 
@@ -349,8 +374,86 @@ const DashBoard = () => {
 			{
 				// END NEXT STEPS
 			}
-
 			<h3 className={alertMsg ? "alert-box" : ""}>{alertMsg}</h3>
+			<ReactModal
+				isOpen={isPopupOpen}
+				contentLabel="Minimal Modal Example"
+				className={"modal"}
+				overlayClassName={"overlay"}
+			>
+				<>
+					<div className="close-container">
+						<IconButton
+							tooltip="Close popup"
+							text="close"
+							onButtonClick={() => {
+								setIsPopupOpen(false);
+							}}
+						></IconButton>
+					</div>
+					{gameState === GameState.draw && (
+						<div className="modal-body-container">
+							<img alt="track examples" src="/assets/tracks.gif" />
+							<div className="text-container">
+								<h1>Introduzione</h1>
+								<p>
+									Qesto gioco ti permette di disegnare un pista e di gareggiarci
+									sopra.
+									<br />I passaggi del gioco sono quattro:
+								</p>
+								<ul>
+									<li>1. Disegno della pista</li>
+									<li>2. Disegno della linea di partenza</li>
+									<li>3. Invito al tuo avversario</li>
+									<li>4. Gara</li>
+								</ul>
+								<p>
+									Prima di invitare il tuo avversario potrai esercitarti a
+									girare sull pista che hai appena disegnato. <br />
+								</p>
+
+								<h1>1. Disegno della "peestah"</h1>
+								<p>
+									Nell'area verde, che rappresenta il campo di gara, devi
+									disegnare una <strong>pista nera</strong>.<br />
+									Devi disegnare un anello chiuso.
+									<br />
+									Non puoi disegnare fuori dalla linea tratteggiata rossa,
+									<br />
+									che rappresenta il confine del campo di gara.
+									<br /> Puoi disegnare bivi, ma sappi che il tuo avversario
+									potrà
+									<br />
+									scegliere sempre la via più breve verso il traguardo.
+									<br />
+									A destra puoi cambiare il colore e la grandezza del pennello
+									<br />
+									Durante la fase di disegno puoi anche salvare una pista e
+									caricarla in seguito.
+								</p>
+							</div>
+						</div>
+					)}
+					{gameState === GameState.drawStartLane && (
+						<>
+							<img alt="start lane" src="/assets/start_lane.gif" />
+						</>
+					)}
+					{gameState === GameState.trainingStart && (
+						<>
+							<div>
+								<img alt="start lane" src="/assets/progressione_marce.png" />
+							</div>
+							<div>
+								<img alt="start lane" src="/assets/angoli.gif" />
+							</div>
+							<div>
+								<img alt="start lane" src="/assets/incidente.gif" />
+							</div>
+						</>
+					)}
+				</>
+			</ReactModal>
 		</StyledDashBoard>
 	);
 };

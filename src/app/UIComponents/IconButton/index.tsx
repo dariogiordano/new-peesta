@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React from "react";
 import StyledIconButton from "./styled";
 
 export interface IconButtonProps {
@@ -6,23 +6,16 @@ export interface IconButtonProps {
 	onButtonClick: Function;
 	disabled?: boolean;
 	tooltip: string;
+	color?: string;
 }
 
-const Button = (props: IconButtonProps) => {
+const Button: React.FC<IconButtonProps> = (props: IconButtonProps) => {
 	const handleClick = () => props.onButtonClick();
-	let over = useRef(false);
+
 	return (
-		<StyledIconButton onClick={handleClick}>
-			<span
-				onMouseOver={() => (over.current = true)}
-				onMouseOut={() => (over.current = false)}
-				className="material-icons"
-			>
-				{props.text}
-			</span>
-			<span className={over.current ? "tooltip on" : " tooltip off"}>
-				{props.tooltip}
-			</span>
+		<StyledIconButton onClick={handleClick} color={props.color}>
+			<span className="material-icons">{props.text}</span>
+			<span className="tooltip">{props.tooltip}</span>
 		</StyledIconButton>
 	);
 };

@@ -48,6 +48,8 @@ import {
 	selectMyTrailData,
 	selectOpponentTrailData,
 	selectRaceLaps,
+	setMyTrailData,
+	initialMyTrailData,
 } from "./gridSlice";
 import StyledGrid from "./styled";
 import SvgBoard from "./svgBoard";
@@ -67,9 +69,6 @@ const Grid = () => {
 	useEffect(() => {
 		if (trackData.grid.length === 0) navigate("/draw");
 		if (gameState === GameState.trainingEnd) {
-			dispatch(
-				setAlertMsg(`It took you ${myTrailData.movesNumber} moves. Good job!`)
-			);
 		}
 	});
 
@@ -100,7 +99,7 @@ const Grid = () => {
 				) * CELL_SIZE,
 		};
 		//disegno della start lane
-		if (gameState === GameState.drawFinishLine) {
+		if (gameState === GameState.drawStartLane) {
 			if (!myTrailData.isMoving) {
 				lastPointRef.current = point;
 				if (getGridValue(point, trackData.grid) === GridValue.track) {
@@ -212,8 +211,16 @@ const Grid = () => {
 					can be emitted via socket to the opponent. in the meantime it sets the GameState, RaceState and RaceEndState*/
 
 					if (newCurrentLap === raceLaps + 1) {
-						if (gameState === GameState.trainingStart)
-							dispatch(changeGameState(GameState.trainingEnd));
+						if (gameState === GameState.trainingStart) {
+							dispatch(
+								setAlertMsg(
+									`It took you ${myTrailData.movesNumber} moves. Good job!`
+								)
+							);
+							dispatch(changeGameState(GameState.drawStartLane));
+							dispatch(setMyTrailData(initialMyTrailData));
+						}
+
 						if (gameState === GameState.raceStart)
 							dispatch(changeGameState(GameState.raceEnd));
 						if (raceState === RaceState.lastChanceToDraw)
@@ -265,7 +272,7 @@ const Grid = () => {
 		lastPointRef.current = point;
 
 		//Aggiunge un cerchio di posizione attorno al punto per evidenziare la posizione quando sto piazzando la linea di partenza
-		if (gameState === GameState.drawFinishLine) {
+		if (gameState === GameState.drawStartLane) {
 			dispatch(
 				setMyStartLanePosition(
 					getGridValue(point, trackData.grid) === GridValue.track ? point : null
@@ -289,7 +296,7 @@ const Grid = () => {
 		if (myTrailData.isMoving) {
 			//rimuove il cerchio di posizione
 			dispatch(setMyStartLanePosition(null));
-			if (gameState === GameState.drawFinishLine) {
+			if (gameState === GameState.drawStartLane) {
 				var pointAndDir = getPointAndDir(startLaneStartRef.current, point);
 				dispatch(
 					setStartLane(

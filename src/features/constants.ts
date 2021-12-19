@@ -12,7 +12,7 @@ export const MAX_OFFROAD_LENGTH = 1;
 export enum GameState {
 	start = "start",
 	draw = "draw",
-	drawFinishLine = "drawFinishLine",
+	drawStartLane = "drawStartLane",
 	raceStart = "raceStart",
 	trainingStart = "trainingStart",
 	raceEnd = "raceEnd",
