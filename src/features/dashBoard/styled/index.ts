@@ -82,6 +82,33 @@ const StyledDashBoard = styled.div`
 			word-break: break-all;
 		}
 	}
+	.instructions {
+		background-color: #efefef;
+		border-radius: 10px;
+		padding: 10px;
+		.header {
+			display: flex;
+			justify-content: space-between;
+		}
+		.close:hover {
+			color: tomato;
+			cursor: pointer;
+		}
+		.link-to-info {
+			font-weight: bold;
+			text-decoration: underline;
+			&:hover {
+				cursor: pointer;
+				color: tomato;
+			}
+		}
+
+		h3 {
+			margin: 0;
+			font-family: "Staatliches", cursive;
+			color: tomato;
+		}
+	}
 `;
 
 export default StyledDashBoard;

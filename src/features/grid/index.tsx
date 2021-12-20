@@ -185,7 +185,8 @@ const Grid = () => {
 					) &&
 					moveDetails.finishLineInfo !== "wrong direction"
 				) {
-					dispatch(setMyMovesNumber(myTrailData.movesNumber + 1));
+					const newMoveNumber = myTrailData.movesNumber + 1;
+					dispatch(setMyMovesNumber(newMoveNumber));
 					directionHistoryRef.current = moveDetails.direction;
 					//setto un variabile locale per currentlap altrimenti se la gara finisce devo aspettare la mossa successiva per accorgermene
 					let newCurrentLap = myTrailData.currentLap;
@@ -211,9 +212,7 @@ const Grid = () => {
 					if (newCurrentLap === raceLaps + 1) {
 						if (gameState === GameState.trainingStart) {
 							dispatch(
-								setAlertMsg(
-									`It took you ${myTrailData.movesNumber} moves. Good job!`
-								)
+								setAlertMsg(`It took you ${newMoveNumber} moves. Good job!`)
 							);
 							dispatch(changeGameState(GameState.drawStartLane));
 							dispatch(setMyTrailData(initialMyTrailData));

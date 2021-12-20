@@ -7,10 +7,12 @@ import { GameState } from "../constants";
 
 export interface DashBoardState {
 	gameState: GameState;
+	istructionsOpen: boolean;
 }
 
 const initialState: DashBoardState = {
 	gameState: GameState.start,
+	istructionsOpen: false,
 };
 
 export const dashBoardSlice = createSlice({
@@ -20,9 +22,14 @@ export const dashBoardSlice = createSlice({
 		changeGameState: (state, action: PayloadAction<GameState>) => {
 			state.gameState = action.payload;
 		},
+		setInstructionsOpen: (state, action: PayloadAction<boolean>) => {
+			state.istructionsOpen = action.payload;
+		},
 	},
 });
 
-export const { changeGameState } = dashBoardSlice.actions;
+export const { changeGameState, setInstructionsOpen } = dashBoardSlice.actions;
 export const selectGameState = (state: RootState) => state.dashBoard.gameState;
+export const selectInstructionsOpen = (state: RootState) =>
+	state.dashBoard.istructionsOpen;
 export default dashBoardSlice.reducer;

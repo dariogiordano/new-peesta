@@ -21,7 +21,7 @@ const CopyToClipboard = (props: IProps) => {
 				onButtonClick={() => handleChange()}
 				text={copied ? "COPIED!*" : "CLICK TO COPY LINK"}
 			/>
-			{copied && <span>* You can send it to yout opponent now.</span>}
+			{copied && <span>*You can paste it now.</span>}
 		</StyledCopyToClipboard>
 	);
 };

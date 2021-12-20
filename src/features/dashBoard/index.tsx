@@ -9,7 +9,11 @@ import {
 	selectSize,
 	setExternalDataUrl,
 } from "../drawBoard/drawBoardSlice";
-import { selectGameState } from "./dashBoardSlice";
+import {
+	selectGameState,
+	selectInstructionsOpen,
+	setInstructionsOpen,
+} from "./dashBoardSlice";
 import StyledDashBoard from "./styled";
 import { changeGameState } from "./dashBoardSlice";
 import {
@@ -53,6 +57,7 @@ import { socket } from "../socketClient";
 import { PlayerType } from "../types";
 import IconButton from "../../app/UIComponents/IconButton";
 import ReactModal from "react-modal";
+import HelpModal from "../../app/UIComponents/HelpModal";
 
 const DashBoard = () => {
 	const dispatch = useAppDispatch();
@@ -70,14 +75,16 @@ const DashBoard = () => {
 	const raceEndState = useAppSelector(selectRaceEndState);
 	const startLane = useAppSelector(selectStartLane);
 	const fileRef = useRef<HTMLInputElement>(null);
+	const instructionsOpen = useAppSelector(selectInstructionsOpen);
 	const [isPopupOpen, setIsPopupOpen] = useState<boolean>(false);
 
 	const otherRound = () => {
-		dispatch(setRaceState(RaceState.waitingOpponentMove));
-		dispatch(setRaceEndState(RaceEndState.racing));
 		dispatch(resetForNewRound());
+		dispatch(setRaceEndState(RaceEndState.racing));
+		dispatch(setRaceState(RaceState.waitingOpponentMove));
 		dispatch(changeGameState(GameState.raceStart));
 		dispatch(setPlayerType(PlayerType.opponent));
+
 		socket.emit("newRound");
 	};
 	const startRace = () => {
@@ -157,78 +164,6 @@ const DashBoard = () => {
 			<p className="subtitle">
 				Draw a track, send it to your opponent and start racing!
 			</p>
-
-			<div className="flex-box tools">
-				{(gameState === GameState.start || gameState === GameState.draw) && (
-					<>
-						<div className="brush-color">
-							<p>Brush Color</p>
-							<ColorButton
-								icon="add"
-								onButtonClick={() => dispatch(changeColor(TRACK_COLOR))}
-								brushColor={brushColor}
-								color={TRACK_COLOR}
-							/>
-							<ColorButton
-								icon="remove"
-								onButtonClick={() => dispatch(changeColor(BG_COLOR))}
-								brushColor={brushColor}
-								color={BG_COLOR}
-							/>
-						</div>
-						<div className="brush-size">
-							<p>Brush Size</p>
-							<Slider
-								min={CELL_SIZE * 2}
-								max={CELL_SIZE * 4}
-								cursorSize={brushSize}
-								default={brushSize}
-								onChange={(e: number) => {
-									if (Math.round(e) % Math.round(CELL_SIZE / 2) === 0)
-										dispatch(changeSize(e));
-								}}
-							></Slider>
-						</div>
-					</>
-				)}
-				{gameState === GameState.drawStartLane && (
-					<div>
-						<p>
-							Set number of laps. Now it's <strong>{raceLaps}</strong>
-						</p>
-						<Slider
-							min={1}
-							max={5}
-							cursorSize={CELL_SIZE * 2}
-							default={raceLaps}
-							onChange={(e: number) => dispatch(setRaceLaps(e))}
-						></Slider>
-					</div>
-				)}
-				{(gameState === GameState.raceStart ||
-					gameState === GameState.trainingStart) && (
-					<p className="no-select">
-						LAP:{myTrailData.currentLap}/{raceLaps}
-						<br />
-						GEAR:{myTrailData.gear}
-						<br />
-						MOVES:{myTrailData.movesNumber}
-					</p>
-				)}
-				{(gameState === GameState.raceEnd ||
-					raceEndState === RaceEndState.waitingOpponentFinish) && (
-					<p className="no-select">
-						LAP:{raceLaps}/{raceLaps}
-						<br />
-						GEAR:{myTrailData.gear}
-						<br />
-						MOVES:{myTrailData.movesNumber}
-					</p>
-				)}
-			</div>
-			{
-				//end tools
-			}
 			<div className="flex-box actions">
 				{(gameState === GameState.start ||
 					gameState === GameState.draw ||
@@ -298,7 +233,7 @@ const DashBoard = () => {
 				{gameState === GameState.raceStart &&
 					raceState === RaceState.waitingOpponentStart && (
 						<p className="race-url">
-							{`${window.location.protocol}//${window.location.host}/${roomName}/${myId}`}
+							<strong>{`${window.location.protocol}//${window.location.host}/${roomName}/${myId}`}</strong>
 						</p>
 					)}
 				{gameState === GameState.raceStart &&
@@ -331,6 +266,118 @@ const DashBoard = () => {
 			{
 				//end actions
 			}
+
+			<div className="flex-box tools">
+				{(gameState === GameState.start || gameState === GameState.draw) && (
+					<>
+						<div className="brush-color">
+							<p>Brush Color</p>
+							<ColorButton
+								icon="add"
+								onButtonClick={() => dispatch(changeColor(TRACK_COLOR))}
+								brushColor={brushColor}
+								color={TRACK_COLOR}
+							/>
+							<ColorButton
+								icon="remove"
+								onButtonClick={() => dispatch(changeColor(BG_COLOR))}
+								brushColor={brushColor}
+								color={BG_COLOR}
+							/>
+						</div>
+						<div className="brush-size">
+							<p>Brush Size</p>
+							<Slider
+								min={CELL_SIZE * 2}
+								max={CELL_SIZE * 4}
+								cursorSize={brushSize}
+								default={brushSize}
+								onChange={(e: number) => {
+									if (Math.round(e) % Math.round(CELL_SIZE / 2) === 0)
+										dispatch(changeSize(e));
+								}}
+							></Slider>
+						</div>
+					</>
+				)}
+				{gameState === GameState.drawStartLane && (
+					<div>
+						<p>
+							Set number of laps. Now it's <strong>{raceLaps}</strong>
+						</p>
+						<Slider
+							min={1}
+							max={5}
+							cursorSize={CELL_SIZE * 2}
+							default={raceLaps}
+							onChange={(e: number) => dispatch(setRaceLaps(e))}
+						></Slider>
+					</div>
+				)}
+				{((gameState === GameState.raceStart &&
+					raceState !== RaceState.waitingOpponentStart) ||
+					gameState === GameState.trainingStart) && (
+					<p className="no-select">
+						LAP:{myTrailData.currentLap}/{raceLaps}
+						<br />
+						GEAR:{myTrailData.gear}
+						<br />
+						MOVES:{myTrailData.movesNumber}
+					</p>
+				)}
+
+				{gameState === GameState.raceStart &&
+					raceState === RaceState.waitingOpponentStart && (
+						<p className="no-select">
+							<strong>Send this link to your opponent</strong> and wait for him
+							to start the race. You will make the first move.
+						</p>
+					)}
+				{(gameState === GameState.raceEnd ||
+					raceEndState === RaceEndState.waitingOpponentFinish) && (
+					<p className="no-select">
+						LAP:{raceLaps}/{raceLaps}
+						<br />
+						GEAR:{myTrailData.gear}
+						<br />
+						MOVES:{myTrailData.movesNumber}
+					</p>
+				)}
+			</div>
+			{
+				//end tools
+			}
+			{instructionsOpen && (
+				<div className="instructions">
+					<div className="header">
+						<h3>You've been challenged!</h3>
+						<div
+							className="close"
+							onClick={() => {
+								dispatch(setInstructionsOpen(false));
+							}}
+						>
+							<span className="material-icons">close</span>
+						</div>
+					</div>
+
+					<p>
+						Someone invited you to play "PEESTAH!".
+						<br />
+						If you already know how to play simply close this message, otherwise{" "}
+						<span
+							className="link-to-info"
+							onClick={() => {
+								setIsPopupOpen(true);
+							}}
+						>
+							here are some info that could help you.
+						</span>{" "}
+						Enjoy!
+					</p>
+				</div>
+			)}
+
 			{gameState !== GameState.raceStart &&
 				gameState !== GameState.trainingStart && (
 					<p className="next-steps">Next steps</p>
@@ -381,78 +428,16 @@ const DashBoard = () => {
 				className={"modal"}
 				overlayClassName={"overlay"}
 			>
-				<>
-					<div className="close-container">
-						<IconButton
-							tooltip="Close popup"
-							text="close"
-							onButtonClick={() => {
-								setIsPopupOpen(false);
-							}}
-						></IconButton>
-					</div>
-					{gameState === GameState.draw && (
-						<div className="modal-body-container">
-							<img alt="track examples" src="/assets/tracks.gif" />
-							<div className="text-container">
-								<h1>Introduzione</h1>
-								<p>
-									Qesto gioco ti permette di disegnare un pista e di gareggiarci
-									sopra.
-									<br />I passaggi del gioco sono quattro:
-								</p>
-								<ul>
-									<li>1. Disegno della pista</li>
-									<li>2. Disegno della linea di partenza</li>
-									<li>3. Invito al tuo avversario</li>
-									<li>4. Gara</li>
-								</ul>
-								<p>
-									Prima di invitare il tuo avversario potrai esercitarti a
-									girare sull pista che hai appena disegnato. <br />
-								</p>
-
-								<h1>1. Disegno della "peestah"</h1>
-								<p>
-									Nell'area verde, che rappresenta il campo di gara, devi
-									disegnare una <strong>pista nera</strong>.<br />
-									Devi disegnare un anello chiuso.
-									<br />
-									Non puoi disegnare fuori dalla linea tratteggiata rossa,
-									<br />
-									che rappresenta il confine del campo di gara.
-									<br /> Puoi disegnare bivi, ma sappi che il tuo avversario
-									potrà
-									<br />
-									scegliere sempre la via più breve verso il traguardo.
-									<br />
-									A destra puoi cambiare il colore e la grandezza del pennello
-									<br />
-									Durante la fase di disegno puoi anche salvare una pista e
-									caricarla in seguito.
-								</p>
-							</div>
-						</div>
-					)}
-					{gameState === GameState.drawStartLane && (
-						<>
-							<img alt="start lane" src="/assets/start_lane.gif" />
-						</>
-					)}
-					{gameState === GameState.trainingStart && (
-						<>
-							<div>
-								<img alt="start lane" src="/assets/progressione_marce.png" />
-							</div>
-							<div>
-								<img alt="start lane" src="/assets/angoli.gif" />
-							</div>
-							<div>
-								<img alt="start lane" src="/assets/incidente.gif" />
-							</div>
-						</>
-					)}
-				</>
+				<div className="close-container">
+					<IconButton
+						tooltip="Close popup"
+						text="close"
+						onButtonClick={() => {
+							setIsPopupOpen(false);
+						}}
+					></IconButton>
+				</div>
+				<HelpModal />
 			</ReactModal>
 		</StyledDashBoard>
 	);

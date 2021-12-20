@@ -21,47 +21,54 @@ body {
 
 
  .modal {
-		position: absolute;
-		top: 10vh;
-		left: 10vw;
-		right: 10vw;
-		bottom: 10vh;
-		background-color: ${TRACK_COLOR};
-		border-radius: 10px;
-		padding:20px 24px;
-		color:white;
-		h1{
-		margin:0 0 10px 0;
-		font-family: "Staatliches", cursive;
-		}
+	position: absolute;
+	top: 10vh;
+	left: 15vw;
+	right: 15vw;
+	bottom: 10vh;
+	background-color: ${TRACK_COLOR};
+	border-radius: 10px;
+	padding:20px 24px;
+	color:white;
+	.close-container{
+		position:absolute;
+		right:25px;
+	}
+	.modal-body-wrapper{
+		margin-top:50px;
+		overflow:auto;
+		height: calc(80vh - 90px);
 		.modal-body-container{
 			display: flex;
-			justify-content:left;
-			img{height:fit-content}
-			margin-top:50px;overflow:auto;
-			height: calc(80vh - 90px);
-		}
-		.text-container{
-			margin-left:20px;
-			
-			padding-right:20px;
-		}
-		.close-container{
-			position:absolute;
-		
-			right:25px;
-			
+			justify-content:space-between;
+			.img-container{
+				width:max-content;
+				text-align:right;
+				img{
+				
+					height:fit-content
+				}
+			}		
+			.text-container{
+				h1{
+					margin:0 0 10px 0;
+					font-family: "Staatliches", cursive;
+				}
+				margin-left:20px;
+				padding-right:20px;
+			}
 		}
 	}
+}
 
-	.overlay {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background-color: RGBA(0,0,0,0.7);
-	}
+.overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: RGBA(0,0,0,0.7);
+}
 
 `;
 

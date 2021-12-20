@@ -25,7 +25,11 @@ import {
 	setPlayerType,
 	setTrackData,
 } from "../grid/gridSlice";
-import { changeGameState, selectGameState } from "../dashBoard/dashBoardSlice";
+import {
+	changeGameState,
+	selectGameState,
+	setInstructionsOpen,
+} from "../dashBoard/dashBoardSlice";
 import { GameState, RaceEndState, RaceState } from "../constants";
 import { useNavigate } from "react-router-dom";
 import { ClientToServerEvents, ServerToClientEvents } from "./types";
@@ -46,16 +50,6 @@ const SocketClient = () => {
 
 	useEffect(() => {
 		//socket  emit
-		/**
-		 * register second player if there is a roomName and a OpponentId from queryString
-		 *
-		 */
-		if (roomName && opponentId && gameState === GameState.start) {
-			socket.emit("registerPlayer", null, roomName);
-			dispatch(setPlayerType(PlayerType.opponent));
-			dispatch(changeGameState(GameState.raceStart));
-			dispatch(setRaceState(RaceState.waitingOpponentMove));
-		}
 
 		/**
 		 * register first player pushing trackData
@@ -70,6 +64,17 @@ const SocketClient = () => {
 			socket.emit("registerPlayer", trackData, null);
 			dispatch(setPlayerType(PlayerType.starter));
 			dispatch(setRaceState(RaceState.waitingOpponentStart));
+		}
+
+		/**
+		 * register second player if there is a roomName and a OpponentId from queryString
+		 *
+		 */
+		if (roomName && opponentId && gameState === GameState.start) {
+			socket.emit("registerPlayer", null, roomName);
+			dispatch(setPlayerType(PlayerType.opponent));
+			dispatch(changeGameState(GameState.raceStart));
+			dispatch(setRaceState(RaceState.waitingOpponentMove));
 		}
 
 		if (gameState === GameState.raceStart && raceState === RaceState.moved) {
@@ -87,7 +92,7 @@ const SocketClient = () => {
 				dispatch(changeGameState(GameState.raceEnd));
 				dispatch(setRaceState(RaceState.end));
 				dispatch(setRaceEndState(RaceEndState.won));
-			} else {
+			} else if (myTrailPoint.length > 0) {
 				console.log("firstToFinishRace");
 				socket.emit("firstToFinishRace", myTrailPoint[myTrailPoint.length - 1]);
 				dispatch(setRaceEndState(RaceEndState.waitingOpponentFinish));
@@ -118,6 +123,7 @@ const SocketClient = () => {
 			if (!myPlayerId) {
 				dispatch(setMyPlayerId(playerId));
 				dispatch(setTrackData(tData));
+				dispatch(setInstructionsOpen(true));
 				navigate("/play");
 			} else {
 				dispatch(setRaceState(RaceState.moving));
@@ -127,11 +133,12 @@ const SocketClient = () => {
 		//socket On
 		socket.on("newRound", (playerId) => {
 			if (myPlayerId !== playerId) {
-				dispatch(changeGameState(GameState.raceStart));
 				dispatch(resetForNewRound());
-				dispatch(setPlayerType(PlayerType.starter));
 				dispatch(setRaceEndState(RaceEndState.racing));
+				dispatch(changeGameState(GameState.raceStart));
 				dispatch(setRaceState(RaceState.moving));
+
+				dispatch(setPlayerType(PlayerType.starter));
 				dispatch(setAlertMsg("Your opponent asked for a new round. Let'go!"));
 			}
 		});
