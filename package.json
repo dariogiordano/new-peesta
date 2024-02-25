@@ -4,8 +4,6 @@
 	 "engines": {
   	  "node": "16.20.2"
   	},
-	  "files": ["dist", "server.js"],
-	  "main": "server.js",
 	"private": true,
 	"dependencies": {
 		"@reduxjs/toolkit": "^1.5.1",
@@ -32,7 +30,7 @@
 	"scripts": {
 		"start-static": "react-scripts start",
 		"start": "node server.js",
-		"build": "react-scripts build && npm start",
+		"build": "react-scripts build",
 		"test": "react-scripts test",
 		"eject": "react-scripts eject",
 		"watch": "cra-build-watch"
